@@ -88,6 +88,8 @@ class TestItem:
     
     def _get_name(self, node):
         name: str = node.obj.__doc__
+        if name:
+            name = name.splitlines()[0]
         if not name:
             name = node.name
         name = name.capitalize()

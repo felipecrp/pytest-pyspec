@@ -8,7 +8,10 @@ class TestHouse:
         assert 1 == 1
         
     class TestTwoFloors:
-        "with two floors"
+        """with two floors
+        
+        A house with two floor has stairs
+        """
 
         def test_stairs(self):
             "has stairs"
