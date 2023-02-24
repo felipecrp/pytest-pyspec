@@ -1,3 +1,5 @@
+from os import wait
+import time
 from typing import Sequence, Union
 
 import pytest
@@ -100,12 +102,19 @@ def pytest_runtest_makereport(item, call):
     report: pytest.Report = outcome.get_result()
     report.doc = item.obj.__doc__
 
+first = True
 def pytest_report_teststatus(report: pytest.TestReport, config: pytest.Config):
-    # print('pytest_report_teststatus')
+    global first
     if report.when == 'setup':
-        output = report.doc
+        output = '  ' + report.doc
+        if first:
+            output = '\n' + output
+            first = False
         return '', output, output
     if report.when == 'teardown':
-        output = '\n'
+        output = ''
         return '', output, output
-    return None
+    
+    output = '\r.\n'
+    return '', output, output
+    # return None
