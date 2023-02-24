@@ -1,20 +1,19 @@
-
 import pytest
 
 class TestHouse:
     "a House"
     
-    def test_has_door(self):
+    def test_door(self):
         "has door"
         assert 1 == 1
         
     class TestTwoFloors:
         "with two floors"
 
-        def test_has_stairs(self):
+        def test_stairs(self):
             "has stairs"
             assert 1 == 1
 
-        def test_has_second_floor(self):
+        def test_second_floor(self):
             "has second floor"
             assert 1 == 1
