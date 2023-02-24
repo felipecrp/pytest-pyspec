@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "pytest-pyspec"
+version = "0.1.0"
+description = "A python test spec based on pytest"
+authors = ["Felipe Curty <felipecrp@gmail.com>"]
+license = "GPL-3.0-only"
+readme = "README.md"
+packages = [
+    { include = "pytest_pyspec" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+pytest = "^7.2.1"
+
+[tool.poetry.plugins.pytest11]
+pytest_pyspec = "pytest_pyspec.plugin"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
