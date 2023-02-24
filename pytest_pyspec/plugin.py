@@ -1,6 +1,6 @@
 from os import wait
 import time
-from typing import Sequence, Union
+from typing import List, Sequence, Union
 
 import pytest
 import _pytest
@@ -12,109 +12,114 @@ def pytest_addoption(parser: pytest.Parser,
     group.addoption(
         '--pyspec',
         action='store_true',
-        default=False,
+        dest='pyspec',
         help='Enables pyspec features'
     )
 
-# def pytest_configure(config: pytest.Config):
-    # if getattr(config.option, 'spec', 0) and not getattr(config.option, 'quiet', 0) and not getattr(config.option, 'verbose', 0):
-    # old_logreport = TerminalReporter.pytest_runtest_logreport
-    # TerminalReporter.pytest_runtest_logreport = _pytest_runtest_logreport
+enabled = False
+def pytest_configure(config: pytest.Config):
+    global enabled
+    if config.getoption('pyspec') and not config.getoption('verbose'):
+        enabled = True
 
-def _pytest_runtest_logreport(self: TerminalReporter, report: pytest.TestReport) -> None:
-    # if report.when == 'call':
-    #     self._tw.line()
-    #     self._tw.line('teste')
-    #     self._tw.write(report.item.obj.__doc__)
-    #     # print(report.item, report.outcome)
-    # self.flush()
-    self._tests_ran = True
-    rep = report
-    res: Tuple[
-        str, str, Union[str, Tuple[str, Mapping[str, bool]]]
-    ] = self.config.hook.pytest_report_teststatus(report=rep, config=self.config)
-    category, letter, word = res
-    if not isinstance(word, tuple):
-        markup = None
-    else:
-        word, markup = word
-    self._add_stats(category, [rep])
-    if not letter and not word:
-        # Probably passed setup/teardown.
-        return
-    running_xdist = hasattr(rep, "node")
-    if markup is None:
-        was_xfail = hasattr(report, "wasxfail")
-        if rep.passed and not was_xfail:
-            markup = {"green": True}
-        elif rep.passed and was_xfail:
-            markup = {"yellow": True}
-        elif rep.failed:
-            markup = {"red": True}
-        elif rep.skipped:
-            markup = {"yellow": True}
-        else:
-            markup = {}
-    # if self.verbosity <= 0:
-    if self.verbosity < 0: 
-        self._tw.write(letter, **markup)
-    else:
-        self._progress_nodeids_reported.add(rep.nodeid)
-        line = self._locationline(rep.nodeid, *rep.location)
-        if not running_xdist:
-            self.write_ensure_prefix(line, word, **markup)
-            if rep.skipped or hasattr(report, "wasxfail"):
-                reason = _get_raw_skip_reason(rep)
-                if self.config.option.verbose < 2:
-                    available_width = (
-                        (self._tw.fullwidth - self._tw.width_of_current_line)
-                        - len(" [100%]")
-                        - 1
-                    )
-                    formatted_reason = _format_trimmed(
-                        " ({})", reason, available_width
-                    )
-                else:
-                    formatted_reason = f" ({reason})"
+def node_to_list(node):
+    current_node = node
+    nodes = [current_node]
+    while current_node.parent:
+        current_node = current_node.parent
+        nodes.insert(0, current_node)
+    return nodes
 
-                if reason and formatted_reason is not None:
-                    self._tw.write(formatted_reason)
-            if self._show_progress_info:
-                self._write_progress_information_filling_space()
-        else:
-            self.ensure_newline()
-            self._tw.write("[%s]" % rep.node.gateway.id)
-            if self._show_progress_info:
-                self._tw.write(
-                    self._get_progress_information_message() + " ", cyan=True
-                )
-            else:
-                self._tw.write(" ")
-            self._tw.write(word, **markup)
-            self._tw.write(" " + line)
-            self.currentfspath = -2
-    self.flush()
+
+class TestItem:
+    def __init__(self, item, previous_test_item):
+        self._item = item
+        self._previous_test_item = previous_test_item
+        self._nodes = node_to_list(item)
+
+    def level(self):
+        return len(self._nodes)
+    
+    def parent(self, level):
+        return self._nodes[level]
+    
+    def _get_identation(self):
+        return ' '.join([' ']*self.level())
+    
+    def format_setup(self):
+        test_mark = ' '
+        
+        depth = self._calculate_depth()
+        output = self.output(depth)
+        return '', output, (output, {"white": True})
+
+    def format_teardown(self):
+        return ('', '\n', '')
+    
+    def name(self):
+        return self._item.name
+    
+    def _calculate_depth(self) -> int:
+        if not self._previous_test_item:
+            return self.level()
+        
+        if self._item.parent != self._previous_test_item._item.parent:
+            return self.level()
+        
+        depth = self.level() - self._previous_test_item.level()
+
+        if depth == 0:
+            depth += 1
+        return depth
+
+    def output(self, depth: int) -> str:
+        output = ''
+        show_output = len(self._nodes) - 2 - depth
+        last_line = self.level() - 3
+        for i, node in enumerate(self._nodes[2:]):
+            ident = '  ' * (i)
+            if i >= show_output:
+                line = f"\n  {ident}{self._get_name(node)}"
+                if i == last_line:
+                    line = f"{line:70}"
+                output += line
+        # output += '\r'
+        return output
+    
+    def _get_name(self, node):
+        name: str = node.obj.__doc__
+        if not name:
+            name = node.name
+        name = name.capitalize()
+        return name
+
+test_item_key = pytest.StashKey[TestItem]()
+def pytest_collection_modifyitems(session, config, items):
+    previous_test_item = None
+    for i, item in enumerate(items):
+        test_item = TestItem(item, previous_test_item)
+        item.stash[test_item_key] = test_item
+        previous_test_item = test_item
 
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     outcome = yield
     report: pytest.Report = outcome.get_result()
-    report.doc = item.obj.__doc__
+    report.item = item
 
-first = True
+
 def pytest_report_teststatus(report: pytest.TestReport, config: pytest.Config):
-    global first
-    if report.when == 'setup':
-        output = '  ' + report.doc
-        if first:
-            output = '\n' + output
-            first = False
-        return '', output, output
-    if report.when == 'teardown':
-        output = ''
-        return '', output, output
+    if enabled:
+        item = report.item
+        test_item = item.stash[test_item_key]
+        
+        if report.when == 'setup':
+            return test_item.format_setup()
     
-    output = '\r.\n'
-    return '', output, output
-    # return None
+    # if report.when == 'call':
+    #     if report.passed:
+    #         return ('passed', '.\n', ('passed', {'green': True}))
+    
+    # if report.when == 'teardown':
+    #     return test_item.format_teardown()
