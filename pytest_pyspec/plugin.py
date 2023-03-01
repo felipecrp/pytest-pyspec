@@ -41,6 +41,9 @@ class TestItem:
     def level(self):
         return len(self._parents)
 
+    def parent(self):
+        return self._parents[-1]
+
     def _get_identation(self):
         return ' '.join([' ']*self.level())
     
@@ -49,7 +52,7 @@ class TestItem:
         
         depth = self._calculate_depth()
         output = self.output(depth)
-        return '', output, (output, {"white": True})
+        return output
 
     def format_teardown(self):
         return ('', '\n', '')
@@ -93,6 +96,13 @@ class TestItem:
         name = name.capitalize()
         return name
 
+    def get_color(self, report: pytest.TestReport):
+        if report.failed:
+            return 'red'
+        if not report.passed:
+            return 'white'
+        return 'green'
+
 test_item_key = pytest.StashKey[TestItem]()
 def pytest_collection_modifyitems(session, config, items):
     previous_test_item = None
@@ -114,8 +124,10 @@ def pytest_report_teststatus(report: pytest.TestReport, config: pytest.Config):
         item = report.item
         test_item = item.stash[test_item_key]
         
-        if report.when == 'setup':
-            return test_item.format_setup()
+        if report.when == 'call':
+            output = test_item.format_setup()
+            color = test_item.get_color(report)
+            return '', output, ('', {color: True})
     
     # if report.when == 'call':
     #     if report.passed:

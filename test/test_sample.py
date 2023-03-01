@@ -15,7 +15,7 @@ class TestHouse:
 
         def test_stairs(self):
             "has stairs"
-            assert 1 == 1
+            assert 1 == 2
 
         def test_second_floor(self):
             "has second floor"

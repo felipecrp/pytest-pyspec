@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "pytest-pyspec"
-version = "0.2.2"
+version = "0.2.3"
 description = "A python test spec based on pytest"
 authors = ["Felipe Curty <felipecrp@gmail.com>"]
 license = "GPL-3.0-only"
@@ -15,6 +15,9 @@ pytest = "^7.2.1"
 
 [tool.poetry.plugins.pytest11]
 pytest_pyspec = "pytest_pyspec.plugin"
+
+[tool.pytest.ini_options]
+addopts = "--pyspec"
 
 [build-system]
 requires = ["poetry-core"]
