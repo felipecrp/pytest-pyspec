@@ -1,5 +1,6 @@
 from os import wait
 import time
+from types import ModuleType
 from typing import List, Sequence, Union
 
 import pytest
@@ -22,12 +23,12 @@ def pytest_configure(config: pytest.Config):
     if config.getoption('pyspec') and not config.getoption('verbose'):
         enabled = True
 
-def node_to_list(node):
-    current_node = node
-    nodes = [current_node]
-    while current_node.parent:
-        current_node = current_node.parent
-        nodes.insert(0, current_node)
+def get_parent_nodes(node):
+    nodes = []
+    node = node.parent
+    while node and not isinstance(node.obj, ModuleType):
+        nodes.insert(0, node)
+        node = node.parent
     return nodes
 
 
@@ -35,14 +36,11 @@ class TestItem:
     def __init__(self, item, previous_test_item):
         self._item = item
         self._previous_test_item = previous_test_item
-        self._nodes = node_to_list(item)
+        self._parents = get_parent_nodes(item)
 
     def level(self):
-        return len(self._nodes)
-    
-    def parent(self, level):
-        return self._nodes[level]
-    
+        return len(self._parents)
+
     def _get_identation(self):
         return ' '.join([' ']*self.level())
     
@@ -74,15 +72,15 @@ class TestItem:
 
     def output(self, depth: int) -> str:
         output = ''
-        show_output = len(self._nodes) - 2 - depth
-        last_line = self.level() - 3
-        for i, node in enumerate(self._nodes[2:]):
-            ident = '  ' * (i)
-            if i >= show_output:
-                line = f"\n  {ident}{self._get_name(node)}"
-                if i == last_line:
-                    line = f"{line:70}"
-                output += line
+        for i, node in enumerate(self._parents):
+            ident = '  ' * i
+            line = f"\n  {ident}{self._get_name(node)}"
+            output += line
+        
+        ident = '  ' * (i+1)
+        line = f"\n  {ident}{self._get_name(self._item)}"
+        line = f"{line:70}"
+        output += line
         # output += '\r'
         return output
     
