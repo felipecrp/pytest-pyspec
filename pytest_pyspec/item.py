@@ -35,6 +35,9 @@ class Item:
             description = description.replace('describe_', '')
             split = True
 
+        if description.lower().startswith("with_"):
+            split = True
+
         if split:
             description = description.replace('_', ' ')
 
