@@ -1,5 +1,6 @@
 import pytest
 from pytest_pyspec.item import ItemFactory, Test
+from pytest_pyspec.output import print_container, print_test
 
 
 def pytest_addoption(parser: pytest.Parser,
@@ -53,9 +54,9 @@ def pytest_report_teststatus(report: pytest.TestReport, config: pytest.Config):
             if not prev_test \
                     or test.container != prev_test.container:
                 # Show container
-                description = test.container.description
-                return '', f"\n{description}", ('', {'white': True})
+                output = print_container(test.container)
+                return '', output, ('', {'white': True})
 
         if report.when == 'call':
-            description = test.description
-            return report.outcome, f"\n{description}", ''
+            output = print_test(test)
+            return report.outcome, output, ''
