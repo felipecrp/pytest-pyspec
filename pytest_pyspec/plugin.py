@@ -1,13 +1,8 @@
-from os import wait
-import time
-from types import ModuleType
-from typing import List, Sequence, Union
-
 import pytest
-import _pytest
-from _pytest.terminal import TerminalReporter
+from pytest_pyspec.item import ItemFactory, Test
 
-def pytest_addoption(parser: pytest.Parser, 
+
+def pytest_addoption(parser: pytest.Parser,
                      pluginmanager: pytest.PytestPluginManager):
     group = parser.getgroup('general')
     group.addoption(
@@ -17,121 +12,50 @@ def pytest_addoption(parser: pytest.Parser,
         help='Enables pyspec features'
     )
 
+
 enabled = False
 def pytest_configure(config: pytest.Config):
     global enabled
     if config.getoption('pyspec') and not config.getoption('verbose'):
         enabled = True
 
-def get_parent_nodes(node):
-    nodes = []
-    node = node.parent
-    while node and not isinstance(node.obj, ModuleType):
-        nodes.insert(0, node)
-        node = node.parent
-    return nodes
 
-
-class TestItem:
-    def __init__(self, item, previous_test_item):
-        self._item = item
-        self._previous_test_item = previous_test_item
-        self._parents = get_parent_nodes(item)
-
-    def level(self):
-        return len(self._parents)
-
-    def parent(self):
-        return self._parents[-1]
-
-    def _get_identation(self):
-        return ' '.join([' ']*self.level())
-    
-    def format_setup(self):
-        test_mark = ' '
-        
-        depth = self._calculate_depth()
-        output = self.output(depth)
-        return output
-
-    def format_teardown(self):
-        return ('', '\n', '')
-    
-    def name(self):
-        return self._item.name
-    
-    def _calculate_depth(self) -> int:
-        if not self._previous_test_item:
-            return self.level()
-        
-        if self._item.parent != self._previous_test_item._item.parent:
-            return self.level()
-        
-        depth = self.level() - self._previous_test_item.level()
-
-        if depth == 0:
-            depth += 1
-        return depth
-
-    def output(self, depth: int) -> str:
-        output = ''
-        for i, node in enumerate(self._parents):
-            ident = '  ' * i
-            line = f"\n  {ident}{self._get_name(node)}"
-            output += line
-        
-        ident = '  ' * (i+1)
-        line = f"\n  {ident}{self._get_name(self._item)}"
-        line = f"{line:70}"
-        output += line
-        # output += '\r'
-        return output
-    
-    def _get_name(self, node):
-        name: str = node.obj.__doc__
-        if name:
-            name = name.splitlines()[0]
-        if not name:
-            name = node.name
-        name = name.capitalize()
-        return name
-
-    def get_color(self, report: pytest.TestReport):
-        if report.failed:
-            return 'red'
-        if not report.passed:
-            return 'white'
-        return 'green'
-
-test_item_key = pytest.StashKey[TestItem]()
+test_key = pytest.StashKey[Test]()
+prev_test_key = pytest.StashKey[Test]()
 def pytest_collection_modifyitems(session, config, items):
-    previous_test_item = None
-    for i, item in enumerate(items):
-        test_item = TestItem(item, previous_test_item)
-        item.stash[test_item_key] = test_item
-        previous_test_item = test_item
+    if enabled:
+        factory = ItemFactory()
+        prev_test = None
+        for i, item in enumerate(items):
+            test = factory.create(item)
+            item.stash[test_key] = test
+            item.stash[prev_test_key] = prev_test
+            prev_test = test
 
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(item, call):
     outcome = yield
-    report: pytest.Report = outcome.get_result()
-    report.item = item
+    if enabled:
+        report: pytest.Report = outcome.get_result()
+        #TODO Check whether the report has a stash
+        #TODO move previous test to test class
+        report.test = item.stash[test_key]
+        report.prev_test = item.stash[prev_test_key]
 
 
 def pytest_report_teststatus(report: pytest.TestReport, config: pytest.Config):
     if enabled:
-        item = report.item
-        test_item = item.stash[test_item_key]
-        
+        test = report.test
+        prev_test = report.prev_test
+
+        if report.when == 'setup':
+            if not prev_test \
+                    or test.container != prev_test.container:
+                # Show container
+                description = test.container.description
+                return '', f"\n{description}", ('', {'white': True})
+
         if report.when == 'call':
-            output = test_item.format_setup()
-            color = test_item.get_color(report)
-            return '', output, ('', {color: True})
-    
-    # if report.when == 'call':
-    #     if report.passed:
-    #         return ('passed', '.\n', ('passed', {'green': True}))
-    
-    # if report.when == 'teardown':
-    #     return test_item.format_teardown()
+            description = test.description
+            return report.outcome, f"\n{description}", ''

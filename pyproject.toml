@@ -16,6 +16,10 @@ pytest = "^7.2.1"
 [tool.poetry.plugins.pytest11]
 pytest_pyspec = "pytest_pyspec.plugin"
 
+
+[tool.poetry.group.dev.dependencies]
+autopep8 = "^2.0.2"
+
 [tool.pytest.ini_options]
 addopts = "--pyspec"
 
