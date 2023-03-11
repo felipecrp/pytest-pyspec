@@ -12,12 +12,14 @@ class TestHouse:
     "a House"
     
     def test_door(self):
-        "has a door"
+        "has door"
         assert 1 == 1
         
     class TestTwoFloors:
-        "with two floors"
-
+        """with two floors
+        
+        A house with two floor has stairs
+        """
         def test_stairs(self):
             "has stairs"
             assert 1 == 1
@@ -25,18 +27,25 @@ class TestHouse:
         def test_second_floor(self):
             "has second floor"
             assert 1 == 1
+
+        def test_third_floor(self):
+            "has third floor"
+            assert 1 == 2
 ```
 
 Generates the following output:
 
 ```
 test/test_sample.py 
-  A house
-    Has a door                                                       .
-  A house
-    With two floors
-      Has stairs                                                     .
-      Has second floor                                               .      [100%]
+
+A house
+  ✓ Has door
+
+A house
+  With two floors
+    ✓ Has stairs
+    ✓ Has second floor
+    ✗ Has third floor
 ```
 
 ## Installing and running **pySpec**

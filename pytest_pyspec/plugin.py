@@ -58,5 +58,6 @@ def pytest_report_teststatus(report: pytest.TestReport, config: pytest.Config):
                 return '', output, ('', {'white': True})
 
         if report.when == 'call':
+            test.outcome = report.outcome
             output = print_test(test)
             return report.outcome, output, ''

@@ -24,6 +24,7 @@ class Test(Item):
     def __init__(self, item: pytest.Item) -> None:
         super().__init__(item)
         self.container: Container = None
+        self.outcome: str = None
 
     @property
     def level(self) -> int:

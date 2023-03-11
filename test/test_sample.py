@@ -12,11 +12,15 @@ class TestHouse:
         
         A house with two floor has stairs
         """
-        @pytest.mark.xfail
         def test_stairs(self):
             "has stairs"
-            assert 1 == 2
+            assert 1 == 1
 
         def test_second_floor(self):
             "has second floor"
             assert 1 == 1
+
+        @pytest.mark.xfail
+        def test_third_floor(self):
+            "has third floor"
+            assert 1 == 2
