@@ -1,5 +1,5 @@
 
-The **pySpec** plugin transforms the pytest output into RSpec.
+The **pytest-pyspec** plugin transforms the pytest output into a result similar to the RSpec.
 
 Just nest your tests using classes and include _docstring_ for each class and test. You can create any nested levels.
 
