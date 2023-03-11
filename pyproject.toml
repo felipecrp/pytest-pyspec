@@ -26,3 +26,6 @@ addopts = "--pyspec"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[project.urls]
+source = "https://github.com/felipecrp/pytest-pyspec"
