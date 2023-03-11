@@ -11,9 +11,33 @@ class Item:
 
         if not description:
             description = self._item.name
+            description = self._parse_description(description)
 
         description = description.splitlines()[0]
         description = description.capitalize()
+        return description
+
+    def _parse_description(self, description: str):
+        split = False
+        if description.lower().startswith("it_"):
+            description = description.replace('it_', '')
+            split = True
+
+        if description.lower().startswith("test_it_"):
+            description = description.replace('test_it_', '')
+            split = True
+
+        if description.lower().startswith("test_describe_"):
+            description = description.replace('test_describe_', '')
+            split = True
+
+        if description.lower().startswith("describe_"):
+            description = description.replace('describe_', '')
+            split = True
+
+        if split:
+            description = description.replace('_', ' ')
+
         return description
 
     def __repr__(self):

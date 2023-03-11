@@ -16,8 +16,7 @@ class TestHouse:
             "has stairs"
             assert 1 == 1
 
-        def test_second_floor(self):
-            "has second floor"
+        def test_it_has_second_floor(self):
             assert 1 == 1
 
         @pytest.mark.xfail
