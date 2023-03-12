@@ -1,4 +1,5 @@
 from types import ModuleType
+from typing import Dict, List
 import pytest
 
 class Item:
@@ -35,9 +36,6 @@ class Item:
             description = description.replace('describe_', '')
             split = True
 
-        if description.lower().startswith("with_"):
-            split = True
-
         if split:
             description = description.replace('_', ' ')
 
@@ -61,8 +59,8 @@ class Test(Item):
 class Container(Item):
     def __init__(self, item: pytest.Item):
         super().__init__(item)
-        self.tests = list[Test]()
-        self.containers = list[Container]()
+        self.tests: List[Test] = list()
+        self.containers: List[Container] = list()
         self.parent = None
 
     def add(self, test: Test):
@@ -109,7 +107,7 @@ class ItemFactory:
 
 class ContainerFactory:
     def __init__(self) -> None:
-        self.containers = dict[str, Container]()
+        self.containers: Dict[str, Container] = dict()
 
     def create(self, item) -> Container:
         containers = self._create_containers(item)
