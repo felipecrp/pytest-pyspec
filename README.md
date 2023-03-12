@@ -1,3 +1,4 @@
+[![](https://github.com/felipecrp/pytest-pyspec/actions/workflows/pytest.yml/badge.svg)](https://github.com/felipecrp/pytest-pyspec/actions/workflows/pytest.yml)
 
 The **pytest-pyspec** plugin transforms the pytest output into a result similar to the RSpec.
 
