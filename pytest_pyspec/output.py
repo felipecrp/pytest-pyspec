@@ -4,9 +4,10 @@ from .item import Container, Test
 
 def print_container(container: Container):
     output = "\n"
-    for container in container.flat_list():
-        output += print_parent_container(container)
-        container = container.parent
+    if container:
+        for container in container.flat_list():
+            output += print_parent_container(container)
+            container = container.parent
     return output
 
 def print_parent_container(container: Container):

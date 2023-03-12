@@ -53,6 +53,8 @@ class Test(Item):
 
     @property
     def level(self) -> int:
+        if not self.container:
+            return 0
         return self.container.level +1
    
     
@@ -100,7 +102,8 @@ class ItemFactory:
 
         container_item = item.parent
         container = self.container_factory.create(container_item)
-        container.add(test_item)       
+        if container:
+            container.add(test_item)       
 
         return test_item
         
@@ -111,6 +114,9 @@ class ContainerFactory:
 
     def create(self, item) -> Container:
         containers = self._create_containers(item)
+        if not containers:
+            return None
+        
         return containers[-1]
     
     def _create_unique_container(self, item):
