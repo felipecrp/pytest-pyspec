@@ -22,13 +22,12 @@ def pytest_configure(config: pytest.Config):
 
         python_functions = config.getini("python_functions")
         python_functions.append('it_')
-        config.option.python_functions = python_functions
+        # config.option.python_functions = python_functions
 
         python_classes = config.getini("python_classes")
         python_classes.append('describe_')
         python_classes.append('with_')
-        config.option.python_classes = python_classes
-
+        # config.option.python_classes = python_classes
 
 
 test_key = pytest.StashKey[Test]()

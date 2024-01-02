@@ -5,7 +5,7 @@ pytest_plugins = ["pytester"]
 class Test:
     "A Test" 
 
-    class with_docstring:
+    class Testdocstring:
         "with docstring"
 
         def test_docstring(self, pytester):
@@ -20,7 +20,7 @@ class Test:
             output = '\n'.join(result.outlines)
             assert re.search(r'✓ Say hello', output)
 
-    class with_multiline_docstring:
+    class Testmultiline_docstring:
         "with multiline docstring"
 
         def test_docstring(self, pytester):
@@ -40,7 +40,7 @@ class Test:
 class TestCase:
     "A test case"
 
-    class with_docstring:
+    class Testdocstring:
         "with docstring"
 
         def test_docstring(self, pytester):
@@ -57,7 +57,7 @@ class TestCase:
             output = '\n'.join(result.outlines)
             assert re.search(r'A hello\n  ✓ Say hello', output)
 
-    class with_multiline_docstring:
+    class Testwith_multiline_docstring:
         "with multiline docstring"
 
         def test_docstring(self, pytester):

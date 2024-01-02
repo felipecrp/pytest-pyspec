@@ -1,6 +1,10 @@
 from types import ModuleType
 from typing import Dict, List
+
+import re
+
 import pytest
+
 
 class Item:
     def __init__(self, item: pytest.Item) -> None:
@@ -8,37 +12,31 @@ class Item:
 
     @property
     def description(self):        
-        description = self._item.obj.__doc__
+        docstring = self._item.obj.__doc__
+        if docstring:
+            return self._parse_docstring(docstring)
+        return self._parse_itemname(self._item.name)
 
-        if not description:
-            description = self._item.name
-            description = self._parse_description(description)
-
-        description = description.splitlines()[0]
-        description = description.capitalize()
+    def _parse_docstring(self, docstring):
+        description = docstring.splitlines()[0]
+        description = description.strip()
         return description
 
-    def _parse_description(self, description: str):
-        split = False
-        if description.lower().startswith("it_"):
-            description = description.replace('it_', '')
-            split = True
-
-        if description.lower().startswith("test_it_"):
-            description = description.replace('test_it_', '')
-            split = True
-
-        if description.lower().startswith("test_describe_"):
-            description = description.replace('test_describe_', '')
-            split = True
-
-        if description.lower().startswith("describe_"):
-            description = description.replace('describe_', '')
-            split = True
-
-        if split:
-            description = description.replace('_', ' ')
-
+    def _parse_name(self, name):
+        description = re.sub(
+            r'(?!^[A-Z])([A-Z])',
+            r'_\g<1>',
+            name)
+        description = description.lower() 
+        description = ' '.join(description.split('_'))
+        return description
+    
+    def _parse_itemname(self, name):
+        description = self._parse_name(name)
+        description = re.sub(
+            r'^(test)',
+            'it',
+            description)
         return description
 
     def __repr__(self):
@@ -91,6 +89,18 @@ class Container(Item):
             item = item.parent
         
         return level
+    
+    def _parse_itemname(self, name):
+        description = self._parse_name(name)
+        description = re.sub(
+            r'^(test)',
+            'A',
+            description)
+        description = re.sub(
+            r'^(with)',
+            'with',
+            description)
+        return description
 
 
 class ItemFactory:
