@@ -22,18 +22,18 @@ def pytest_configure(config: pytest.Config):
 
         python_functions = config.getini("python_functions")
         python_functions.append('it_')
-        # config.option.python_functions = python_functions
+        config.option.python_functions = python_functions
 
         python_classes = config.getini("python_classes")
-        python_classes.append('describe_')
-        python_classes.append('with_')
-        # config.option.python_classes = python_classes
+        python_classes.append('Describe')
+        python_classes.append('With')
+        config.option.python_classes = python_classes
 
 
 test_key = pytest.StashKey[Test]()
 prev_test_key = pytest.StashKey[Test]()
 def pytest_collection_modifyitems(session, config, items):
-    if enabled:
+   if enabled:
         factory = ItemFactory()
         prev_test = None
         for i, item in enumerate(items):
@@ -70,3 +70,9 @@ def pytest_report_teststatus(report: pytest.TestReport, config: pytest.Config):
             test.outcome = report.outcome
             output = print_test(test)
             return report.outcome, output, ''
+        
+        if report.when == 'setup' and report.skipped:
+            test.outcome = report.outcome
+            output = print_test(test)
+            return report.outcome, output, ''
+        

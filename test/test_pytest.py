@@ -2,7 +2,7 @@ import pytest
 import re
 
 
-pytest_plugins = ["pytester"]
+pytest_plugins = ['pytest_pyspec', 'pytester']
 
 
 class TestFunction:
@@ -10,46 +10,88 @@ class TestFunction:
     def test_use_docstring(self, pytester: pytest.Pytester):
         pytester.makepyfile("""
             def test_a():
-                ''' it do something '''
+                ''' do something '''
                 assert 1 == 1
         """)
-
-        result = pytester.runpytest()
+        result = pytester.runpytest('--pyspec')
         output = '\n'.join(result.outlines)
-        assert re.search(r'✓ it do something', output)
+        assert re.search(r'✓ do something', output)
 
     def test_use_test_name(self, pytester: pytest.Pytester):
         pytester.makepyfile("""
             def test_do_something():
                 assert 1 == 1
         """)
-
-        result = pytester.runpytest()
+        result = pytester.runpytest('--pyspec')
         output = '\n'.join(result.outlines)
-        assert re.search(r'✓ it do something', output)
+        assert re.search(r'✓ do something', output)
     
     def test_use_the_prefix_test(self, pytester: pytest.Pytester):
-        assert 1 == 1
-        return
-    
-    def it_use_the_prefix_it(self, pytester: pytest.Pytester):
-        assert 1 == 1
-        return
         pytester.makepyfile("""
             def test_do_something():
                 assert 1 == 1
         """)
-
-        result = pytester.runpytest()
-        output = '\n'.join(result.outlines)
-        assert re.search(r'✓ it do something', output)
-
-
-    class TestContext:
-        def test_function(self):
-            assert True
+        result = pytester.runpytest('--pyspec')
+        outcomes = result.parseoutcomes()
+        assert 'passed' in outcomes
+        assert outcomes['passed'] == 1
     
+    @pytest.mark.skip
+    def it_use_the_prefix_it(self, pytester: pytest.Pytester):
+        pytester.makepyfile(
+            """
+            def it_do_something():
+                assert 1 == 1
+            """
+        )
+        outcomes = pytester.runpytest('--pyspec').parseoutcomes()
+        assert 'passed' in outcomes
+        assert outcomes['passed'] == 1
 
-class TestCase:
-    def test_case(self):
-        assert True
+
+    class WithTestCase:
+        def test_describe_the_test_case(self, pytester: pytest.Pytester):
+            pytester.makepyfile('''
+                class TestThing:
+                    def test_do_something(self):
+                        assert 1 == 1
+            ''')
+            result = pytester.runpytest('--pyspec')
+            output = '\n'.join(result.outlines)
+            assert re.search(r'A thing', output)
+
+        @pytest.mark.skip
+        def it_use_the_prefix_describe(self, pytester: pytest.Pytester):
+            pytester.makepyfile('''
+                class DescribeThing:
+                    def test_do_something(self):
+                        assert 1 == 1
+            ''')
+            result = pytester.runpytest('--pyspec')
+            output = '\n'.join(result.outlines)
+            assert re.search(r'A thing', output)
+
+        class WithContext:
+            # @pytest.mark.skip
+            def test_describe_the_context(self, pytester: pytest.Pytester):
+                pytester.makepyfile('''
+                    class TestThing:
+                        class WithContext:
+                            def test_do_something(self):
+                                assert 1 == 1
+                ''')
+                result = pytester.runpytest('--pyspec')
+                output = '\n'.join(result.outlines)
+                # assert re.search(r'A thing', output)
+
+            @pytest.mark.skip
+            def test_handle_negative_context(self, pytester: pytest.Pytester):
+                pytester.makepyfile('''
+                    class TestThing:
+                        class WithoutContext:
+                            def test_do_something(self):
+                                assert 1 == 1
+                ''')
+                result = pytester.runpytest('--pyspec')
+                output = '\n'.join(result.outlines)
+                # assert re.search(r'A thing', output)

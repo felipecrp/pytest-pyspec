@@ -34,8 +34,8 @@ class Item:
     def _parse_itemname(self, name):
         description = self._parse_name(name)
         description = re.sub(
-            r'^(test)',
-            'it',
+            r'^(test|it) ',
+            '',
             description)
         return description
 
@@ -93,13 +93,13 @@ class Container(Item):
     def _parse_itemname(self, name):
         description = self._parse_name(name)
         description = re.sub(
-            r'^(test)',
+            r'^(test|describe)',
             'A',
             description)
-        description = re.sub(
-            r'^(with)',
-            'with',
-            description)
+        # description = re.sub(
+        #     r'^(with)',
+        #     'with',
+        #     description)
         return description
 
 
