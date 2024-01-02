@@ -16,6 +16,7 @@ class TestFunction:
         result = pytester.runpytest('--pyspec')
         output = '\n'.join(result.outlines)
         assert re.search(r'✓ do something', output)
+        result.assert_outcomes(passed=1)
 
     def test_use_test_name(self, pytester: pytest.Pytester):
         pytester.makepyfile("""
@@ -25,6 +26,7 @@ class TestFunction:
         result = pytester.runpytest('--pyspec')
         output = '\n'.join(result.outlines)
         assert re.search(r'✓ do something', output)
+        result.assert_outcomes(passed=1)
     
     def test_use_the_prefix_test(self, pytester: pytest.Pytester):
         pytester.makepyfile("""
@@ -32,21 +34,22 @@ class TestFunction:
                 assert 1 == 1
         """)
         result = pytester.runpytest('--pyspec')
-        outcomes = result.parseoutcomes()
-        assert 'passed' in outcomes
-        assert outcomes['passed'] == 1
+        output = '\n'.join(result.outlines)
+        assert re.search(r'✓ do something', output)
+        result.assert_outcomes(passed=1)
     
-    @pytest.mark.skip
-    def it_use_the_prefix_it(self, pytester: pytest.Pytester):
+    # @pytest.mark.skip
+    def test_use_the_prefix_it(self, pytester: pytest.Pytester):
         pytester.makepyfile(
             """
             def it_do_something():
                 assert 1 == 1
             """
         )
-        outcomes = pytester.runpytest('--pyspec').parseoutcomes()
-        assert 'passed' in outcomes
-        assert outcomes['passed'] == 1
+        result = pytester.runpytest('--pyspec')
+        output = '\n'.join(result.outlines)
+        assert re.search(r'✓ do something', output)
+        result.assert_outcomes(passed=1)
 
 
     class WithTestCase:
@@ -59,9 +62,10 @@ class TestFunction:
             result = pytester.runpytest('--pyspec')
             output = '\n'.join(result.outlines)
             assert re.search(r'A thing', output)
+            assert re.search(r'do something', output)
+            result.assert_outcomes(passed=1)
 
-        @pytest.mark.skip
-        def it_use_the_prefix_describe(self, pytester: pytest.Pytester):
+        def test_use_the_prefix_describe(self, pytester: pytest.Pytester):
             pytester.makepyfile('''
                 class DescribeThing:
                     def test_do_something(self):
@@ -70,10 +74,12 @@ class TestFunction:
             result = pytester.runpytest('--pyspec')
             output = '\n'.join(result.outlines)
             assert re.search(r'A thing', output)
+            assert re.search(r'do something', output)
+            result.assert_outcomes(passed=1)
 
         class WithContext:
             # @pytest.mark.skip
-            def test_describe_the_context(self, pytester: pytest.Pytester):
+            def test_show_the_context(self, pytester: pytest.Pytester):
                 pytester.makepyfile('''
                     class TestThing:
                         class WithContext:
@@ -82,9 +88,12 @@ class TestFunction:
                 ''')
                 result = pytester.runpytest('--pyspec')
                 output = '\n'.join(result.outlines)
-                # assert re.search(r'A thing', output)
+                assert re.search(r'A thing', output)
+                assert re.search(r'with context', output)
+                assert re.search(r'do something', output)
+                result.assert_outcomes(passed=1)
 
-            @pytest.mark.skip
+            # @pytest.mark.skip
             def test_handle_negative_context(self, pytester: pytest.Pytester):
                 pytester.makepyfile('''
                     class TestThing:
@@ -94,4 +103,7 @@ class TestFunction:
                 ''')
                 result = pytester.runpytest('--pyspec')
                 output = '\n'.join(result.outlines)
-                # assert re.search(r'A thing', output)
+                assert re.search(r'A thing', output)
+                assert re.search(r'without context', output)
+                assert re.search(r'do something', output)
+                result.assert_outcomes(passed=1)
