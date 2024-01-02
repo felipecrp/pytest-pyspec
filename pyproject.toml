@@ -1,9 +1,9 @@
 [tool.poetry]
 name = "pytest-pyspec"
-version = "0.8.1"
+version = "0.8.2"
 description = "A plugin that transforms the pytest output into a result similar to the RSpec. It enables the use of docstrings to display results and also enables the use of the prefixes \"describe\", \"with\" and \"it\"."
 authors = ["Felipe Curty <felipecrp@gmail.com>"]
-license = "GPL-3.0-only"
+license = "MIT"
 readme = "README.md"
 repository = "https://github.com/felipecrp/pytest-pyspec"
 packages = [
