@@ -20,6 +20,7 @@ def pytest_configure(config: pytest.Config):
     if config.getoption('pyspec') and not config.getoption('verbose'):
         enabled = True
 
+    if config.getoption('pyspec'):
         python_functions = config.getini("python_functions")
         python_functions.append('it_')
         config.option.python_functions = python_functions
@@ -44,18 +45,19 @@ def pytest_collection_modifyitems(session, config, items):
 
 
 @pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_makereport(item, call):
+def pytest_runtest_makereport(item: pytest.Item, call):
     outcome = yield
     if enabled:
         report: pytest.Report = outcome.get_result()
         #TODO Check whether the report has a stash
         #TODO move previous test to test class
-        report.test = item.stash[test_key]
-        report.prev_test = item.stash[prev_test_key]
+        if test_key in item.stash:
+            report.test = item.stash[test_key]
+            report.prev_test = item.stash[prev_test_key]
 
 
 def pytest_report_teststatus(report: pytest.TestReport, config: pytest.Config):
-    if enabled:
+    if enabled and hasattr(report, 'test'):
         test = report.test
         prev_test = report.prev_test
 

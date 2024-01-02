@@ -90,16 +90,18 @@ class Container(Item):
         
         return level
     
+    def _parse_docstring(self, docstring):
+        description = super()._parse_docstring(docstring)
+        if not description.startswith(('with ', 'without ')):
+            description = f'A {description}'
+        return description
+    
     def _parse_itemname(self, name):
         description = self._parse_name(name)
         description = re.sub(
-            r'^(test|describe)',
-            'A',
+            r'^(test|describe) ',
+            'A ',
             description)
-        # description = re.sub(
-        #     r'^(with)',
-        #     'with',
-        #     description)
         return description
 
 

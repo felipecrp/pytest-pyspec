@@ -21,4 +21,4 @@ jobs:
         poetry install
     - name: Test with pyTest
       run: |
-        poetry run pytest
+        poetry run pytest --pyspec
