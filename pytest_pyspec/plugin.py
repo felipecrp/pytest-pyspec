@@ -33,7 +33,10 @@ def pytest_configure(config: pytest.Config):
 
 test_key = pytest.StashKey[Test]()
 prev_test_key = pytest.StashKey[Test]()
-def pytest_collection_modifyitems(session, config, items):
+def pytest_collection_modifyitems(
+        session: pytest.Session, 
+        config: pytest.Config, 
+        items: list[pytest.Item]):
    if enabled:
         factory = ItemFactory()
         prev_test = None

@@ -5,7 +5,7 @@ import re
 pytest_plugins = ['pytest_pyspec', 'pytester']
 
 
-class TestFunction:
+class DescribeFunction:
     def test_use_test_name(self, pytester: pytest.Pytester):
         pytester.makepyfile("""
             def test_do_something():

@@ -117,6 +117,7 @@ class ItemFactory:
         if container:
             container.add(test_item)       
 
+        item.name = test_item.description
         return test_item
         
 
@@ -128,15 +129,16 @@ class ContainerFactory:
         containers = self._create_containers(item)
         if not containers:
             return None
-        
+
         return containers[-1]
     
-    def _create_unique_container(self, item):
+    def _create_unique_container(self, item: pytest.Item):
         if item not in self.containers:
             container = Container(item)
             self.containers[item] = container
 
         container = self.containers.get(item)
+        item.name = container.description
         return container
 
     def _create_containers(self, item):
