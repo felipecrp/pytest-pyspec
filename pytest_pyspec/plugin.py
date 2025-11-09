@@ -122,19 +122,32 @@ def pytest_report_teststatus(report: pytest.TestReport, config: pytest.Config):
     prev_test = report.prev_test
 
     if report.when == 'setup':
-      if not prev_test \
-          or test.container != prev_test.container:
+      if not prev_test or test.container != prev_test.container:
         # Show container
         output = print_container(test.container)
         return '', output, ('', {'white': True})
 
+    # Determine if this is the last test in the container
+    is_last_in_container = False
+    if hasattr(test.container, 'tests'):
+      # Find the index of this test in the container's test list
+      try:
+        idx = test.container.tests.index(test)
+        is_last_in_container = idx == len(test.container.tests) - 1
+      except (ValueError, AttributeError):
+        pass
+
     if report.when == 'call':
       test.outcome = report.outcome
       output = print_test(test)
+      if is_last_in_container:
+        output += '\n'
       return report.outcome, output, ''
-        
+
     if report.when == 'setup' and report.skipped:
       test.outcome = report.outcome
       output = print_test(test)
+      if is_last_in_container:
+        output += '\n'
       return report.outcome, output, ''
         
