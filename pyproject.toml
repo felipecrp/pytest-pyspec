@@ -1,29 +1,34 @@
-[tool.poetry]
+[project]
 name = "pytest-pyspec"
 version = "0.10.0"
-description = "A plugin that transforms the pytest output into a result similar to the RSpec. It enables the use of docstrings to display results and also enables the use of the prefixes \"describe\", \"with\" and \"it\"."
-authors = ["Felipe Curty <felipecrp@gmail.com>"]
-license = "MIT"
+description = 'A plugin that transforms the pytest output into a result similar to the RSpec. It enables the use of docstrings to display results and also enables the use of the prefixes "describe", "with" and "it".'
+authors = [{ name = "Felipe Curty", email = "felipecrp@gmail.com" }]
+requires-python = ">=3.10, <4"
 readme = "README.md"
-repository = "https://github.com/felipecrp/pytest-pyspec"
-packages = [
-    { include = "pytest_pyspec" }
+license = "MIT"
+dependencies = [
+    "pytest>=9,<10",
 ]
 
-[tool.poetry.dependencies]
-python = "^3.8"
-pytest = "^8.3.2"
+[project.urls]
+Repository = "https://github.com/felipecrp/pytest-pyspec"
 
-[tool.poetry.plugins.pytest11]
+[project.entry-points.pytest11]
 pytest_pyspec = "pytest_pyspec.plugin"
 
-[tool.poetry.group.dev.dependencies]
-autopep8 = "^2.0.2"
+[dependency-groups]
+dev = ["autopep8>=2.0.2,<3"]
+
+[tool.hatch.build.targets.sdist]
+include = ["pytest_pyspec"]
+
+[tool.hatch.build.targets.wheel]
+include = ["pytest_pyspec"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.pytest.ini_options]
 addopts = "--pyspec"
-
-[build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
 

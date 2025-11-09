@@ -93,14 +93,14 @@ class Container(Item):
     def _parse_docstring(self, docstring):
         description = super()._parse_docstring(docstring)
         if not description.startswith(('with ', 'without ')):
-            description = f'A {description}'
+            description = f'a {description}'
         return description
     
     def _parse_itemname(self, name):
         description = self._parse_name(name)
         description = re.sub(
-            r'^(test|describe) ',
-            'A ',
+            r'^([Tt]est|[Dd]escribe) ',
+            'a ',
             description)
         return description
 
