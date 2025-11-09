@@ -76,7 +76,7 @@ class Item:
         )
         return description
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return self._item.__repr__()
 
 
@@ -108,27 +108,27 @@ class Container(Item):
     - Contained tests.
     Provides utilities to compute display names and levels.
     """
-    def __init__(self, item: pytest.Item):
+    def __init__(self, item: pytest.Item) -> None:
         super().__init__(item)
         self.tests: List[Test] = list()
         self.containers: List[Container] = list()
         self.parent = None
 
-    def add(self, test: Test):
+    def add(self, test: Test) -> None:
         """
         Attach a Test to this container and set its back-reference.
         """
         self.tests.append(test)
         test.container = self
 
-    def add_container(self, container: 'Container'):
+    def add_container(self, container: 'Container') -> None:
         """
         Attach a child container and set parent back-reference.
         """
         self.containers.append(container)
         container.parent = self
 
-    def flat_list(self):
+    def flat_list(self) -> list:
         """
         Return a list of containers from root to self.
         """
@@ -156,7 +156,7 @@ class Container(Item):
         
         return level
     
-    def _parse_docstring(self, docstring):
+    def _parse_docstring(self, docstring: str) -> str:
         """
         Parse container docstring and prepend an article when appropriate.
 
@@ -169,7 +169,7 @@ class Container(Item):
             description = f'a {description}'
         return description
     
-    def _parse_itemname(self, name):
+    def _parse_itemname(self, name: str) -> str:
         """
         Create a container description from a pytest node name.
 
@@ -217,7 +217,7 @@ class ContainerFactory:
     def __init__(self) -> None:
         self.containers: Dict[str, Container] = dict()
 
-    def create(self, item) -> Container:
+    def create(self, item: pytest.Item) -> 'Container':
         """
         Create (or fetch) the deepest Container for a given pytest node.
         """
@@ -227,7 +227,7 @@ class ContainerFactory:
 
         return containers[-1]
     
-    def _create_unique_container(self, item: pytest.Item):
+    def _create_unique_container(self, item: pytest.Item) -> 'Container':
         """
         Return a unique Container for a pytest node, creating if absent.
 
@@ -243,7 +243,7 @@ class ContainerFactory:
         item.name = container.description
         return container
 
-    def _create_containers(self, item):
+    def _create_containers(self, item: pytest.Item) -> list:
         """
         Build the chain of containers from a pytest node up to the module root.
         """

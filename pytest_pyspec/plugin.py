@@ -1,3 +1,4 @@
+
 """
 Pytest plugin that prints test output in an RSpec-like, readable format.
 
@@ -10,13 +11,17 @@ When enabled with the ``--pyspec`` flag, this plugin:
     hooks, so we can decide when to print a container header.
 """
 
+from typing import Any, Tuple, Generator
+
 import pytest
 from pytest_pyspec.item import ItemFactory, Test
 from pytest_pyspec.output import print_container, print_test
 
 
-def pytest_addoption(parser: pytest.Parser,
-                     pluginmanager: pytest.PytestPluginManager):
+def pytest_addoption(
+  parser: pytest.Parser,
+  pluginmanager: pytest.PytestPluginManager
+) -> None:
     """
     Register the ``--pyspec`` command-line flag.
 
@@ -34,7 +39,7 @@ def pytest_addoption(parser: pytest.Parser,
 
 
 ENABLED_KEY = pytest.StashKey[bool]()
-def pytest_configure(config: pytest.Config):
+def pytest_configure(config: pytest.Config) -> None:
     """
     Initialize plugin state and, when enabled, extend test discovery rules.
 
@@ -66,10 +71,10 @@ def pytest_configure(config: pytest.Config):
 TEST_KEY = pytest.StashKey[Test]()
 PREV_TEST_KEY = pytest.StashKey[Test]()
 def pytest_collection_modifyitems(
-            session: pytest.Session,
-            config: pytest.Config,
-            items: list[pytest.Item],
-        ):
+  session: pytest.Session,
+  config: pytest.Config,
+  items: list[pytest.Item],
+) -> None:
     """
     After collection, wrap each pytest item with our Test model and stash it.
 
@@ -88,7 +93,10 @@ def pytest_collection_modifyitems(
 
 
 @pytest.hookimpl(hookwrapper=True)
-def pytest_runtest_makereport(item: pytest.Item, call):
+def pytest_runtest_makereport(
+  item: pytest.Item,
+  call: pytest.CallInfo
+) -> Generator[Any, Any, None]:
   """
   Inject Test metadata into the report object for later formatting.
 
@@ -107,7 +115,12 @@ def pytest_runtest_makereport(item: pytest.Item, call):
       report.prev_test = item.stash[PREV_TEST_KEY]
 
 
-def pytest_report_teststatus(report: pytest.TestReport, config: pytest.Config):
+from typing import Any, Tuple
+
+def pytest_report_teststatus(
+  report: pytest.TestReport,
+  config: pytest.Config
+) -> Any:
   """
   Produce short status and a human-friendly text line for each test event.
 
