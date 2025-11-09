@@ -60,7 +60,7 @@ class DescribeFunction:
             ''')
             result = pytester.runpytest('--pyspec')
             output = '\n'.join(result.outlines)
-            assert re.search(r'^a thing', output, re.MULTILINE)
+            assert re.search(r'^A Thing', output, re.MULTILINE)
             assert re.search(r'^  ✓ do something', output, re.MULTILINE)
             result.assert_outcomes(passed=1)
 
@@ -72,7 +72,7 @@ class DescribeFunction:
             ''')
             result = pytester.runpytest('--pyspec')
             output = '\n'.join(result.outlines)
-            assert re.search(r'^a thing', output, re.MULTILINE)
+            assert re.search(r'^A Thing', output, re.MULTILINE)
             assert re.search(r'^  ✓ do something', output, re.MULTILINE)
             result.assert_outcomes(passed=1)
 
@@ -101,8 +101,8 @@ class DescribeFunction:
                 ''')
                 result = pytester.runpytest('--pyspec')
                 output = '\n'.join(result.outlines)
-                assert re.search(r'^a thing', output, re.MULTILINE)
-                assert re.search(r'^  with context', output, re.MULTILINE)
+                assert re.search(r'^A Thing', output, re.MULTILINE)
+                assert re.search(r'^  with Context', output, re.MULTILINE)
                 assert re.search(r'^    ✓ do something', output, re.MULTILINE)
                 result.assert_outcomes(passed=1)
 
@@ -116,8 +116,8 @@ class DescribeFunction:
                 ''')
                 result = pytester.runpytest('--pyspec')
                 output = '\n'.join(result.outlines)
-                assert re.search(r'^a thing', output, re.MULTILINE)
-                assert re.search(r'^  without context', output, re.MULTILINE)
+                assert re.search(r'^A Thing', output, re.MULTILINE)
+                assert re.search(r'^  without Context', output, re.MULTILINE)
                 assert re.search(r'^    ✓ do something', output, re.MULTILINE)
                 result.assert_outcomes(passed=1)
                 
@@ -153,4 +153,5 @@ class DescribeFunction:
                     assert re.search(r'^  without context', output, re.MULTILINE)
                     assert re.search(r'^    ✓ do something', output, re.MULTILINE)
                     result.assert_outcomes(passed=1)
+
 

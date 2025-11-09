@@ -10,17 +10,15 @@ When enabled with the ``--pyspec`` flag, this plugin:
   - Uses pytest's stash to pass the current/previous Test objects between
     hooks, so we can decide when to print a container header.
 """
-
 from typing import Any, Tuple, Generator
 
 import pytest
-from pytest_pyspec.item import ItemFactory, Test
-from pytest_pyspec.output import print_container, print_test
+from pytest_pyspec.tree import SemanticTreeBuilder, Test
 
 
 def pytest_addoption(
-  parser: pytest.Parser,
-  pluginmanager: pytest.PytestPluginManager
+    parser: pytest.Parser,
+    pluginmanager: pytest.PytestPluginManager
 ) -> None:
     """
     Register the ``--pyspec`` command-line flag.
@@ -71,9 +69,9 @@ def pytest_configure(config: pytest.Config) -> None:
 TEST_KEY = pytest.StashKey[Test]()
 PREV_TEST_KEY = pytest.StashKey[Test]()
 def pytest_collection_modifyitems(
-  session: pytest.Session,
-  config: pytest.Config,
-  items: list[pytest.Item],
+    session: pytest.Session,
+    config: pytest.Config,
+    items: list[pytest.Item],
 ) -> None:
     """
     After collection, wrap each pytest item with our Test model and stash it.
@@ -83,87 +81,99 @@ def pytest_collection_modifyitems(
     """
     enabled = config.stash.get(ENABLED_KEY, False)
     if enabled:
-        factory = ItemFactory()
+        builder = SemanticTreeBuilder()
         prev_test = None
+        processed_parents = set()
+        
         for i, item in enumerate(items):
-            test = factory.create(item)
+            test = builder.build_tree_for_test(item)
             item.stash[TEST_KEY] = test
             item.stash[PREV_TEST_KEY] = prev_test
             prev_test = test
+            
+            # Update item name to the test case description with prefix for VSCode
+            item.name = test.description_with_prefix
+            
+            # Update parent node names for VSCode test explorer (only once per parent)
+            current = test.parent
+            while current is not None and hasattr(current, '_item'):
+                if current._item not in processed_parents:
+                    current._item.name = current.description_with_prefix
+                    processed_parents.add(current._item)
+                current = current.parent if hasattr(current, 'parent') else None
 
 
 @pytest.hookimpl(hookwrapper=True)
 def pytest_runtest_makereport(
-  item: pytest.Item,
-  call: pytest.CallInfo
+    item: pytest.Item,
+    call: pytest.CallInfo
 ) -> Generator[Any, Any, None]:
-  """
-  Inject Test metadata into the report object for later formatting.
+    """
+    Inject Test metadata into the report object for later formatting.
 
-  As a hookwrapper we yield to let pytest create the report, then attach our
-  Test and prev_test (from stash) so ``pytest_report_teststatus`` can render
-  the right lines.
-  """
-  outcome = yield
-  enabled = item.config.stash.get(ENABLED_KEY, False)
-  if enabled:
-    report: pytest.Report = outcome.get_result()
-    # TODO Check whether the report has a stash
-    # TODO move previous test to test class
-    if TEST_KEY in item.stash:
-      report.test = item.stash[TEST_KEY]
-      report.prev_test = item.stash[PREV_TEST_KEY]
+    As a hookwrapper we yield to let pytest create the report, then attach our
+    Test and prev_test (from stash) so ``pytest_report_teststatus`` can render
+    the right lines.
+    """
+    outcome = yield
+    enabled = item.config.stash.get(ENABLED_KEY, False)
+    if enabled:
+        report: pytest.Report = outcome.get_result()
+        # TODO Check whether the report has a stash
+        # TODO move previous test to test class
+        if TEST_KEY in item.stash:
+            report.test = item.stash[TEST_KEY]
+            report.prev_test = item.stash[PREV_TEST_KEY]
 
 
-from typing import Any, Tuple
 
 def pytest_report_teststatus(
-  report: pytest.TestReport,
-  config: pytest.Config
+    report: pytest.TestReport,
+    config: pytest.Config
 ) -> Any:
-  """
-  Produce short status and a human-friendly text line for each test event.
+    """
+    Produce short status and a human-friendly text line for each test event.
 
-  Behavior (only when pyspec is enabled and a Test is attached):
-  - On setup: if the container changed, print the container header.
-  - On call (or skipped during setup): print the test line with its status
-    mark. We reuse pytest's status tuple format.
-  """
-  enabled = config.stash.get(ENABLED_KEY, False)
-  if enabled and hasattr(report, 'test'):
-    test = report.test
-    prev_test = report.prev_test
+    Behavior (only when pyspec is enabled and a Test is attached):
+    - On setup: if the parent nodes changed, print the parent tree.
+    - On call (or skipped during setup): print the test line with its status
+      mark. We reuse pytest's status tuple format.
+    """
+    enabled = config.stash.get(ENABLED_KEY, False)
+    if enabled and hasattr(report, 'test'):
+        test = report.test
+        prev_test = report.prev_test
 
-    if report.when == 'setup':
-        if not prev_test or test.container != prev_test.container:
-            # Show container, always start with a newline
-            output = '\n' + print_container(test.container)
-            return '', output, ('', {'white': True})
+        if report.when == 'setup':
+            # Check if we need to print parent nodes
+            if not prev_test or test.parent != prev_test.parent:
+                # Show parent tree
+                output = test.get_parent_tree_string()
+                return '', output, ('', {'white': True})
 
-    # Determine if this is the last test in the container
-    is_last_in_container = False
-    if hasattr(test.container, 'tests'):
-        try:
-            idx = test.container.tests.index(test)
-            is_last_in_container = idx == len(test.container.tests) - 1
-        except (ValueError, AttributeError):
-            pass
+        # Determine if this is the last test with the same parent
+        is_last_in_parent = False
+        if test.parent and hasattr(test.parent, 'tests'):
+            try:
+                idx = test.parent.tests.index(test)
+                is_last_in_parent = idx == len(test.parent.tests) - 1
+            except (ValueError, AttributeError):
+                pass
 
-    if report.when == 'call':
-        test.outcome = report.outcome
-        output = print_test(test)
-        # Always start test line with a newline
-        output = '\n' + output
-        # Only add a single newline after the last test in a container
-        if is_last_in_container:
-            output += '\n'
-        return report.outcome, output, ''
+        if report.when == 'call':
+            test.outcome = report.outcome
+            output = test.format_for_output()
+            # Always start test line with a newline
+            output = '\n' + output
+            # Only add a single newline after the last test in a parent
+            if is_last_in_parent:
+                output += '\n'
+            return report.outcome, output, ''
 
-    if report.when == 'setup' and report.skipped:
-        test.outcome = report.outcome
-        output = print_test(test)
-        output = '\n' + output
-        if is_last_in_container:
-            output += '\n'
-        return report.outcome, output, ''
-        
+        if report.when == 'setup' and report.skipped:
+            test.outcome = report.outcome
+            output = test.format_for_output()
+            output = '\n' + output
+            if is_last_in_parent:
+                output += '\n'
+            return report.outcome, output, ''
