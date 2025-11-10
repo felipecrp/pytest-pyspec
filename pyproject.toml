@@ -30,6 +30,7 @@ classifiers = [
 
 [project.urls]
 Repository = "https://github.com/felipecrp/pytest-pyspec"
+Issues = "https://github.com/felipecrp/pytest-pyspec/issues"
 
 [project.entry-points.pytest11]
 pytest_pyspec = "pytest_pyspec.plugin"
