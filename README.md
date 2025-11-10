@@ -171,4 +171,4 @@ a sports car
 
 The plugin is automatically enabled when you use the `--pyspec` flag. No additional configuration is required.
 
-For more information, see the [documentation](doc/README.md).
+For more information, see the [documentation](https://github.com/felipecrp/pytest-pyspec/blob/main/doc/README.md).
