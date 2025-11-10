@@ -125,7 +125,7 @@ class TestTestCaseOutput:
         
         expected = dedent("""
             test_show_the_described_object_name.py 
-            A Thing
+            a Thing
               ✓ do something
         """).strip()
         
@@ -143,7 +143,7 @@ class TestTestCaseOutput:
         
         expected = dedent("""
             test_use_the_prefix_describe.py 
-            A Thing
+            a Thing
               ✓ do something
         """).strip()
         
@@ -163,7 +163,7 @@ class TestTestCaseOutput:
             
             expected = dedent("""
                 test_use_the_docstring.py 
-                A thing
+                a thing
                   ✓ do something
             """).strip()
             
@@ -185,7 +185,7 @@ class TestTestCaseOutput:
             
             expected = dedent("""
                 test_use_the_first_line.py 
-                A Thing
+                a Thing
                   ✓ do something
             """).strip()
             
@@ -208,7 +208,7 @@ class TestTestCaseOutput:
                 
                 expected = dedent("""
                     test_use_the_formatted_name.py 
-                    A Thing
+                    a Thing
                       ✓ do something
                 """).strip()
                 
@@ -229,14 +229,14 @@ class TestTestCaseOutput:
             output = '\n'.join(result.outlines)
             
             expected = dedent("""
-                A Something
+                a Something
                   ✓ first thing
                   ✓ second thing
             """).strip()
             
             assert expected in output
             # Verify the header appears only once
-            assert output.count('A Something') == 1
+            assert output.count('a Something') == 1
             result.assert_outcomes(passed=2)
         
         def test_do_not_repeat_nested_context_headers(self, pytester: pytest.Pytester):
@@ -256,7 +256,7 @@ class TestTestCaseOutput:
             output = '\n'.join(result.outlines)
             
             expected = dedent("""
-                A Parent
+                a Parent
                   ✓ direct child
                 
                   with Nested Context
@@ -266,7 +266,7 @@ class TestTestCaseOutput:
             
             assert expected in output
             # Verify parent header appears only once
-            assert output.count('A Parent') == 1
+            assert output.count('a Parent') == 1
             result.assert_outcomes(passed=3)
         
         def test_show_new_parent_when_switching_branches(self, pytester: pytest.Pytester):
@@ -283,12 +283,12 @@ class TestTestCaseOutput:
             output = '\n'.join(result.outlines)
             
             expected_first = dedent("""
-                A First Branch
+                a First Branch
                   ✓ in first
             """).strip()
             
             expected_second = dedent("""
-                A Second Branch
+                a Second Branch
                   ✓ in second
             """).strip()
             
@@ -310,7 +310,7 @@ class TestTestContextOutput:
         
         expected = dedent("""
             test_show_the_context_name.py 
-            A Thing
+            a Thing
               with Context
                 ✓ do something
         """).strip()
@@ -330,7 +330,7 @@ class TestTestContextOutput:
         
         expected = dedent("""
             test_use_the_formatted_name.py 
-            A Thing
+            a Thing
               with Some Context
                 ✓ do something
         """).strip()
@@ -350,7 +350,7 @@ class TestTestContextOutput:
         
         expected = dedent("""
             test_use_the_prefix_with.py 
-            A Thing
+            a Thing
               with Context
                 ✓ do something
         """).strip()
@@ -370,7 +370,7 @@ class TestTestContextOutput:
         
         expected = dedent("""
             test_use_the_prefix_without.py 
-            A Thing
+            a Thing
               without Context
                 ✓ do something
         """).strip()
@@ -390,7 +390,7 @@ class TestTestContextOutput:
         
         expected = dedent("""
             test_use_the_prefix_when.py 
-            A Thing
+            a Thing
               when the House is Green
                 ✓ do something
         """).strip()
@@ -413,7 +413,7 @@ class TestTestContextOutput:
             
             expected = dedent("""
                 test_use_the_docstring.py 
-                A thing
+                a thing
                   with context
                     ✓ do something
             """).strip()
@@ -438,7 +438,7 @@ class TestTestContextOutput:
             
             expected = dedent("""
                 test_use_the_first_line.py 
-                A thing
+                a thing
                   with context
                     ✓ do something
             """).strip()
@@ -464,7 +464,7 @@ class TestTestContextOutput:
                 
                 expected = dedent("""
                     test_use_the_formatted_name.py 
-                    A thing
+                    a thing
                       when the First Line is Empty
                         ✓ do something
                 """).strip()
@@ -486,7 +486,7 @@ class TestModuleOutput:
         
         expected = dedent("""
             test_example.py 
-            An Example
+            an Example
               ✓ something
         """).strip()
         
@@ -507,7 +507,7 @@ class TestModuleOutput:
         
         expected = dedent("""
             test_example.py 
-            An Example
+            an Example
               ✓ first
               ✓ second
         """).strip()
@@ -532,7 +532,7 @@ class TestPackageOutput:
         
         expected = dedent("""
             mypackage/test_example.py 
-            An Example
+            an Example
               ✓ something
         """).strip()
         
@@ -562,13 +562,13 @@ class TestPackageOutput:
         # Check both modules are shown with their tests
         expected_alpha = dedent("""
             mypackage/test_alpha.py 
-            An Alpha
+            an Alpha
               ✓ something
         """).strip()
         
         expected_beta = dedent("""
             mypackage/test_beta.py 
-            A Beta
+            a Beta
               ✓ something
         """).strip()
         

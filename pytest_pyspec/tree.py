@@ -32,16 +32,12 @@ class PytestNode:
     
     @property
     def description_with_prefix(self) -> str:
-        """Return the description with appropriate prefix (a/an, with/without)."""
+        """Return the description with appropriate prefix (a/an, with/without/when)."""
         if not self.description_prefix:
             return self.description
         
-        prefix = self.description_prefix
-        # Capitalize prefix if description starts with capital letter
-        if self.description and self.description[0].isupper():
-            prefix = prefix.capitalize()
-        
-        return f"{prefix} {self.description}"
+        # For all prefixes, keep them lowercase
+        return f"{self.description_prefix} {self.description}"
     
     def _description_from_docstring(self) -> Optional[str]:
         """Extract description from docstring if available."""
@@ -151,7 +147,7 @@ class DescribedObject(PytestNode):
     def description_prefix(self) -> str:
         """Return 'a' or 'an' based on the first letter of description."""
         first_char = self.description[0].lower() if self.description else 'x'
-        return 'An' if first_char in 'aeiou' else 'A'
+        return 'an' if first_char in 'aeiou' else 'a'
     
     def add_context(self, context: 'TestContext') -> None:
         """Add a nested context to this described object."""
