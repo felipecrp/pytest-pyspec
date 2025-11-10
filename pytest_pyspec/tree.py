@@ -125,7 +125,7 @@ class DescribedObject(PytestNode):
     def description_prefix(self) -> str:
         """Return 'a' or 'an' based on the first letter of description."""
         first_char = self.description[0].lower() if self.description else 'x'
-        return 'an' if first_char in 'aeiou' else 'a'
+        return 'An' if first_char in 'aeiou' else 'A'
     
     def add_context(self, context: 'TestContext') -> None:
         """Add a nested context to this described object."""
@@ -160,15 +160,21 @@ class TestContext(PytestNode):
         # Check 'without' first since it contains 'with'
         if name_lower.startswith('without'):
             return 'without'
-        elif name_lower.startswith('with'):
-            return 'with'
-        return None
+        # All other contexts get 'with' prefix (including those starting with 'with')
+        return 'with'
     
     @property
     def description_with_prefix(self) -> str:
         """Return description with prefix, keeping 'with'/'without' lowercase."""
         if not self.description_prefix:
             return self.description
+        
+        # Check if description already starts with the prefix
+        desc_lower = self.description.lower()
+        if desc_lower.startswith(f"{self.description_prefix} ") or desc_lower == self.description_prefix:
+            # Description already has the prefix, return as-is
+            return self.description
+        
         # For contexts, always keep with/without lowercase
         return f"{self.description_prefix} {self.description}"
     

@@ -1,47 +1,61 @@
 import pytest
-import re
 from textwrap import dedent
 
 
 pytest_plugins = ['pytest_pyspec', 'pytester']
 
 
-class DescribeFunction:
-    def test_use_test_name(self, pytester: pytest.Pytester):
+class TestTestOutput:
+    def test_show_the_test_name(self, pytester: pytest.Pytester):
         pytester.makepyfile("""
             def test_do_something():
                 assert 1 == 1
         """)
         result = pytester.runpytest('--pyspec')
         output = '\n'.join(result.outlines)
-        assert re.search(r'^✓ do something', output, re.MULTILINE)
+        
+        expected = dedent("""
+            test_show_the_test_name.py 
+            ✓ do something
+        """).strip()
+        
+        assert expected in output
         result.assert_outcomes(passed=1)
     
-    def test_use_the_prefix_test(self, pytester: pytest.Pytester):
+    def test_use_test_with_prefix_test(self, pytester: pytest.Pytester):
         pytester.makepyfile("""
             def test_do_something():
                 assert 1 == 1
         """)
         result = pytester.runpytest('--pyspec')
         output = '\n'.join(result.outlines)
-        assert re.search(r'^✓ do something', output, re.MULTILINE)
+        
+        expected = dedent("""
+            test_use_test_with_prefix_test.py 
+            ✓ do something
+        """).strip()
+        
+        assert expected in output
         result.assert_outcomes(passed=1)
     
-    # @pytest.mark.skip
-    def test_use_the_prefix_it(self, pytester: pytest.Pytester):
-        pytester.makepyfile(
-            """
+    def test_use_test_with_prefix_it(self, pytester: pytest.Pytester):
+        pytester.makepyfile("""
             def it_do_something():
                 assert 1 == 1
-            """
-        )
+        """)
         result = pytester.runpytest('--pyspec')
         output = '\n'.join(result.outlines)
-        assert re.search(r'^✓ do something', output, re.MULTILINE)
+        
+        expected = dedent("""
+            test_use_test_with_prefix_it.py 
+            ✓ do something
+        """).strip()
+        
+        assert expected in output
         result.assert_outcomes(passed=1)
 
     class WithDocstring:
-        def test_use_docstring(self, pytester: pytest.Pytester):
+        def test_use_the_docstring(self, pytester: pytest.Pytester):
             pytester.makepyfile("""
                 def test_a():
                     ''' do something '''
@@ -49,115 +63,317 @@ class DescribeFunction:
             """)
             result = pytester.runpytest('--pyspec')
             output = '\n'.join(result.outlines)
-            assert re.search(r'^✓ do something', output, re.MULTILINE)
+            
+            expected = dedent("""
+                test_use_the_docstring.py 
+                ✓ do something
+            """).strip()
+            
+            assert expected in output
             result.assert_outcomes(passed=1)
 
-    class WithTestCase:
-        def test_show_the_test_case(self, pytester: pytest.Pytester):
+    class WithMultilineDocstring:
+        def test_use_the_first_line(self, pytester: pytest.Pytester):
+            pytester.makepyfile("""
+                def test_do_something():
+                    '''
+                    do something with more details
+                    '''
+                    assert 1 == 1
+            """)
+            result = pytester.runpytest('--pyspec')
+            output = '\n'.join(result.outlines)
+            
+            expected = dedent("""
+                test_use_the_first_line.py 
+                ✓ do something
+            """).strip()
+            
+            assert expected in output
+            result.assert_outcomes(passed=1)
+
+        class WithEmptyFirstLine:
+            def test_use_the_formatted_name(self, pytester: pytest.Pytester):
+                pytester.makepyfile("""
+                    def test_do_something():
+                        '''
+                        with more details
+                        '''
+                        assert 1 == 1
+                """)
+                result = pytester.runpytest('--pyspec')
+                output = '\n'.join(result.outlines)
+                
+                expected = dedent("""
+                    test_use_the_formatted_name.py 
+                    ✓ do something
+                """).strip()
+                
+                assert expected in output
+                result.assert_outcomes(passed=1)
+
+
+class TestTestCaseOutput:
+    def test_show_the_described_object_name(self, pytester: pytest.Pytester):
+        pytester.makepyfile('''
+            class TestThing:
+                def test_do_something(self):
+                    assert 1 == 1
+        ''')
+        result = pytester.runpytest('--pyspec')
+        output = '\n'.join(result.outlines)
+        
+        expected = dedent("""
+            test_show_the_described_object_name.py 
+            A Thing
+              ✓ do something
+        """).strip()
+        
+        assert expected in output
+        result.assert_outcomes(passed=1)
+
+    def test_use_the_prefix_describe(self, pytester: pytest.Pytester):
+        pytester.makepyfile('''
+            class DescribeThing:
+                def test_do_something(self):
+                    assert 1 == 1
+        ''')
+        result = pytester.runpytest('--pyspec')
+        output = '\n'.join(result.outlines)
+        
+        expected = dedent("""
+            test_use_the_prefix_describe.py 
+            A Thing
+              ✓ do something
+        """).strip()
+        
+        assert expected in output
+        result.assert_outcomes(passed=1)
+
+    class WithDocstring:
+        def test_use_the_docstring(self, pytester: pytest.Pytester):
+            pytester.makepyfile('''
+                class TestA:
+                    """ thing """
+                    def test_do_something(self):
+                        assert 1 == 1
+            ''')
+            result = pytester.runpytest('--pyspec')
+            output = '\n'.join(result.outlines)
+            
+            expected = dedent("""
+                test_use_the_docstring.py 
+                A thing
+                  ✓ do something
+            """).strip()
+            
+            assert expected in output
+            result.assert_outcomes(passed=1)
+
+    class WithMultilineDocstring:
+        def test_use_the_first_line(self, pytester: pytest.Pytester):
             pytester.makepyfile('''
                 class TestThing:
+                    """
+                    with more details
+                    """
                     def test_do_something(self):
                         assert 1 == 1
             ''')
             result = pytester.runpytest('--pyspec')
             output = '\n'.join(result.outlines)
-            assert re.search(r'^A Thing', output, re.MULTILINE)
-            assert re.search(r'^  ✓ do something', output, re.MULTILINE)
+            
+            expected = dedent("""
+                test_use_the_first_line.py 
+                A Thing
+                  ✓ do something
+            """).strip()
+            
+            assert expected in output
             result.assert_outcomes(passed=1)
 
-        def test_use_the_prefix_describe(self, pytester: pytest.Pytester):
-            pytester.makepyfile('''
-                class DescribeThing:
-                    def test_do_something(self):
-                        assert 1 == 1
-            ''')
-            result = pytester.runpytest('--pyspec')
-            output = '\n'.join(result.outlines)
-            assert re.search(r'^A Thing', output, re.MULTILINE)
-            assert re.search(r'^  ✓ do something', output, re.MULTILINE)
-            result.assert_outcomes(passed=1)
-
-        class WithDocstring:
-            def test_show_the_test_case_docstring(self, pytester: pytest.Pytester):
+        class WithEmptyFirstLine:
+            def test_use_the_formatted_name(self, pytester: pytest.Pytester):
                 pytester.makepyfile('''
-                    class TestA:
-                        """ thing """
+                    class TestThing:
+                        """
+                        
+                        with more details
+                        """
                         def test_do_something(self):
                             assert 1 == 1
                 ''')
                 result = pytester.runpytest('--pyspec')
                 output = '\n'.join(result.outlines)
-                assert re.search(r'^a thing', output, re.MULTILINE)
-                assert re.search(r'^  ✓ do something', output, re.MULTILINE)
-                result.assert_outcomes(passed=1)
-    
-        class WithContext:
-            # @pytest.mark.skip
-            def test_show_the_context(self, pytester: pytest.Pytester):
-                pytester.makepyfile('''
-                    class TestThing:
-                        class WithContext:
-                            def test_do_something(self):
-                                assert 1 == 1
-                ''')
-                result = pytester.runpytest('--pyspec')
-                output = '\n'.join(result.outlines)
-                assert re.search(r'^A Thing', output, re.MULTILINE)
-                assert re.search(r'^  with Context', output, re.MULTILINE)
-                assert re.search(r'^    ✓ do something', output, re.MULTILINE)
-                result.assert_outcomes(passed=1)
-
-            # @pytest.mark.skip
-            def test_handle_negative_context(self, pytester: pytest.Pytester):
-                pytester.makepyfile('''
-                    class TestThing:
-                        class WithoutContext:
-                            def test_do_something(self):
-                                assert 1 == 1
-                ''')
-                result = pytester.runpytest('--pyspec')
-                output = '\n'.join(result.outlines)
-                assert re.search(r'^A Thing', output, re.MULTILINE)
-                assert re.search(r'^  without Context', output, re.MULTILINE)
-                assert re.search(r'^    ✓ do something', output, re.MULTILINE)
-                result.assert_outcomes(passed=1)
                 
-            class WithDocstring:
-                def test_show_the_context_docstring(self, pytester: pytest.Pytester):
-                    pytester.makepyfile('''
-                        class TestA:
-                            """ thing """
-                            class TestB:
-                                """ with context """
-                                def test_do_something(self):
-                                    assert 1 == 1
-                    ''')
-                    result = pytester.runpytest('--pyspec')
-                    output = '\n'.join(result.outlines)
-                    assert re.search(r'^a thing', output, re.MULTILINE)
-                    assert re.search(r'^  with context', output, re.MULTILINE)
-                    assert re.search(r'^    ✓ do something', output, re.MULTILINE)
-                    result.assert_outcomes(passed=1)
+                expected = dedent("""
+                    test_use_the_formatted_name.py 
+                    A Thing
+                      ✓ do something
+                """).strip()
+                
+                assert expected in output
+                result.assert_outcomes(passed=1)
 
-                def test_show_the_negative_context_docstring(self, pytester: pytest.Pytester):
-                    pytester.makepyfile('''
-                        class TestA:
-                            """ thing """
-                            class TestB:
-                                """ without context """
-                                def test_do_something(self):
-                                    assert 1 == 1
-                    ''')
-                    result = pytester.runpytest('--pyspec')
-                    output = '\n'.join(result.outlines)
-                    assert re.search(r'^a thing', output, re.MULTILINE)
-                    assert re.search(r'^  without context', output, re.MULTILINE)
-                    assert re.search(r'^    ✓ do something', output, re.MULTILINE)
-                    result.assert_outcomes(passed=1)
+
+class TestTestContextOutput:
+    def test_show_the_context_name(self, pytester: pytest.Pytester):
+        pytester.makepyfile('''
+            class TestThing:
+                class WithContext:
+                    def test_do_something(self):
+                        assert 1 == 1
+        ''')
+        result = pytester.runpytest('--pyspec')
+        output = '\n'.join(result.outlines)
+        
+        expected = dedent("""
+            test_show_the_context_name.py 
+            A Thing
+              with Context
+                ✓ do something
+        """).strip()
+        
+        assert expected in output
+        result.assert_outcomes(passed=1)
+
+    def test_use_the_formatted_name(self, pytester: pytest.Pytester):
+        pytester.makepyfile('''
+            class TestThing:
+                class TestSomeContext:
+                    def test_do_something(self):
+                        assert 1 == 1
+        ''')
+        result = pytester.runpytest('--pyspec')
+        output = '\n'.join(result.outlines)
+        
+        expected = dedent("""
+            test_use_the_formatted_name.py 
+            A Thing
+              with Some Context
+                ✓ do something
+        """).strip()
+        
+        assert expected in output
+        result.assert_outcomes(passed=1)
+
+    def test_use_the_prefix_with(self, pytester: pytest.Pytester):
+        pytester.makepyfile('''
+            class TestThing:
+                class WithContext:
+                    def test_do_something(self):
+                        assert 1 == 1
+        ''')
+        result = pytester.runpytest('--pyspec')
+        output = '\n'.join(result.outlines)
+        
+        expected = dedent("""
+            test_use_the_prefix_with.py 
+            A Thing
+              with Context
+                ✓ do something
+        """).strip()
+        
+        assert expected in output
+        result.assert_outcomes(passed=1)
+
+    def test_use_the_prefix_without(self, pytester: pytest.Pytester):
+        pytester.makepyfile('''
+            class TestThing:
+                class WithoutContext:
+                    def test_do_something(self):
+                        assert 1 == 1
+        ''')
+        result = pytester.runpytest('--pyspec')
+        output = '\n'.join(result.outlines)
+        
+        expected = dedent("""
+            test_use_the_prefix_without.py 
+            A Thing
+              without Context
+                ✓ do something
+        """).strip()
+        
+        assert expected in output
+        result.assert_outcomes(passed=1)
+
+    class WithDocstring:
+        def test_use_the_docstring(self, pytester: pytest.Pytester):
+            pytester.makepyfile('''
+                class TestA:
+                    """ thing """
+                    class TestB:
+                        """ with context """
+                        def test_do_something(self):
+                            assert 1 == 1
+            ''')
+            result = pytester.runpytest('--pyspec')
+            output = '\n'.join(result.outlines)
+            
+            expected = dedent("""
+                test_use_the_docstring.py 
+                A thing
+                  with context
+                    ✓ do something
+            """).strip()
+            
+            assert expected in output
+            result.assert_outcomes(passed=1)
+
+    class WithMultilineDocstring:
+        def test_use_the_first_line(self, pytester: pytest.Pytester):
+            pytester.makepyfile('''
+                class TestA:
+                    """ thing """
+                    class WithB:
+                        """ context
+                        with context and more details
+                        """
+                        def test_do_something(self):
+                            assert 1 == 1
+            ''')
+            result = pytester.runpytest('--pyspec')
+            output = '\n'.join(result.outlines)
+            
+            expected = dedent("""
+                test_use_the_first_line.py 
+                A thing
+                  with context
+                    ✓ do something
+            """).strip()
+            
+            assert expected in output
+            result.assert_outcomes(passed=1)
+
+        class WithEmptyFirstLine:
+            def test_use_the_formatted_name(self, pytester: pytest.Pytester):
+                pytester.makepyfile('''
+                    class TestA:
+                        """ thing """
+                        class WithContext:
+                            """
+                            
+                            with more details
+                            """
+                            def test_do_something(self):
+                                assert 1 == 1
+                ''')
+                result = pytester.runpytest('--pyspec')
+                output = '\n'.join(result.outlines)
+                
+                expected = dedent("""
+                    test_use_the_formatted_name.py 
+                    A thing
+                      with Context
+                        ✓ do something
+                """).strip()
+                
+                assert expected in output
+                result.assert_outcomes(passed=1)
+
 
 
 class TestModuleOutput:
-    
     def test_show_the_module_name(self, pytester: pytest.Pytester):
         pytester.makepyfile(test_example='''
             class TestExample:
@@ -200,7 +416,6 @@ class TestModuleOutput:
 
 
 class TestPackageOutput:
-    
     def test_show_the_package_name(self, pytester: pytest.Pytester):
         pytester.mkpydir("mypackage")
         pytester.makepyfile(**{
