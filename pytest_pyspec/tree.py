@@ -25,24 +25,38 @@ class PytestNode:
     @property
     def description(self) -> str:
         """Return the base description without article/prefix."""
-        docstring = getattr(self._item.obj, "__doc__", None)
+        docstring = self._description_from_docstring()
         if docstring:
-            first_line = docstring.splitlines()[0].strip()
-            return first_line
-        return self._description_from_identifier(self._original_name)
+            return docstring
+        return self._description_from_identifier()
     
     @property
     def description_with_prefix(self) -> str:
         """Return the description with appropriate prefix (a/an, with/without)."""
-        return self._apply_description_prefix(self.description)
+        if not self.description_prefix:
+            return self.description
+        
+        prefix = self.description_prefix
+        # Capitalize prefix if description starts with capital letter
+        if self.description and self.description[0].isupper():
+            prefix = prefix.capitalize()
+        
+        return f"{prefix} {self.description}"
     
-    def _description_from_identifier(self, name: str) -> str:
+    def _description_from_docstring(self) -> Optional[str]:
+        """Extract description from docstring if available."""
+        docstring = getattr(self._item.obj, "__doc__", None)
+        if docstring:
+            first_line = docstring.splitlines()[0].strip()
+            return first_line
+        return None
+    
+    def _description_from_identifier(self) -> str:
         """Convert a Python identifier into a human-readable description."""
-        normalized = self._convert_identifier_to_words(name)
-        
-        # Remove configured prefixes
+        # First convert identifier to words (CamelCase and snake_case)
+        normalized = self._convert_identifier_to_words(self._original_name)
+        # Then remove configured prefixes
         normalized = self._remove_test_prefixes(normalized)
-        
         return normalized
     
     def _convert_identifier_to_words(self, name: str) -> str:
@@ -61,37 +75,6 @@ class PytestNode:
             pattern = rf'^{prefix}\s+'
             text = re.sub(pattern, '', text, flags=re.IGNORECASE)
         return text
-    
-    def _apply_description_prefix(self, text: str) -> str:
-        """Add appropriate prefix (article or conjunction) to the description."""
-        if not self.description_prefix:
-            return text
-        
-        # Don't add prefix if already starts with with/without
-        if text.lower().startswith(('with ', 'without ')):
-            return text
-        
-        prefix = self._select_article_for_text(text)
-        return f"{prefix} {text}"
-    
-    def _select_article_for_text(self, text: str) -> str:
-        """Select appropriate article (a vs an) and match text capitalization."""
-        if not self.description_prefix:
-            return ""
-        
-        first_char = text[0].lower() if text else 'x'
-        use_an = first_char in 'aeiou'
-        
-        if self.description_prefix.lower() == 'a':
-            article = 'an' if use_an else 'a'
-        else:
-            article = self.description_prefix
-        
-        # Match capitalization of the text
-        if text and text[0].isupper():
-            article = article.capitalize()
-        
-        return article
     
     @property
     def level(self) -> int:
@@ -131,13 +114,18 @@ class TestFile(PytestNode):
 class DescribedObject(PytestNode):
     """Represents a top-level test class (e.g., DescribeMyClass)."""
     prefixes_to_remove = ['test', 'describe']
-    description_prefix = 'a'
     
     def __init__(self, item: pytest.Item):
         super().__init__(item)
         self.parent: Optional[TestFile] = None
         self.contexts: list['TestContext'] = []
         self.tests: list['Test'] = []
+    
+    @property
+    def description_prefix(self) -> str:
+        """Return 'a' or 'an' based on the first letter of description."""
+        first_char = self.description[0].lower() if self.description else 'x'
+        return 'an' if first_char in 'aeiou' else 'a'
     
     def add_context(self, context: 'TestContext') -> None:
         """Add a nested context to this described object."""
@@ -157,14 +145,32 @@ class DescribedObject(PytestNode):
 
 class TestContext(PytestNode):
     """Represents a nested context class (e.g., WithSomeCondition)."""
-    prefixes_to_remove = ['test']
-    description_prefix = None
+    prefixes_to_remove = ['test', 'with', 'without']
     
     def __init__(self, item: pytest.Item):
         super().__init__(item)
         self.parent: Optional['DescribedObject | TestContext'] = None
         self.contexts: list['TestContext'] = []
         self.tests: list['Test'] = []
+    
+    @property
+    def description_prefix(self) -> Optional[str]:
+        """Return 'with' or 'without' based on the original name."""
+        name_lower = self._original_name.lower()
+        # Check 'without' first since it contains 'with'
+        if name_lower.startswith('without'):
+            return 'without'
+        elif name_lower.startswith('with'):
+            return 'with'
+        return None
+    
+    @property
+    def description_with_prefix(self) -> str:
+        """Return description with prefix, keeping 'with'/'without' lowercase."""
+        if not self.description_prefix:
+            return self.description
+        # For contexts, always keep with/without lowercase
+        return f"{self.description_prefix} {self.description}"
     
     def add_context(self, context: 'TestContext') -> None:
         """Add a nested context to this context."""
@@ -176,19 +182,10 @@ class TestContext(PytestNode):
         self.tests.append(test)
         test.parent = self
     
-    def _apply_description_prefix(self, text: str) -> str:
-        """For contexts, ensure 'with'/'without' are lowercase."""
-        if text.lower().startswith('with '):
-            return 'with' + text[4:]
-        elif text.lower().startswith('without '):
-            return 'without' + text[7:]
-        return text
-    
     def format_for_output(self) -> str:
         """Format context for display output."""
         indent = "  " * self.level
         return f"{indent}{self.description_with_prefix}"
-
 
 class Test(PytestNode):
     """Represents an individual test function."""
@@ -216,7 +213,17 @@ class Test(PytestNode):
             return '»'
     
     def get_parent_tree_string(self) -> str:
-        """Get formatted string of all parent nodes from root to this test."""
+        """Get formatted string of all parent nodes from root to this test.
+        
+        Builds the hierarchical header showing all parent contexts for a test.
+        Called when the parent context changes between tests to display the
+        full context path (e.g., "A Function" -> "with Test Case" -> "with Context").
+        
+        Returns:
+            Multi-line string with formatted parent nodes, each on a new line.
+            Skips TestFile nodes (module level) as they're not typically displayed.
+            Returns empty string if test has no parents.
+        """
         output = ""
         if self.parent:
             # Collect parent nodes
