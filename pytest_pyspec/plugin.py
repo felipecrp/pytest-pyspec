@@ -4,7 +4,7 @@ Pytest plugin that prints test output in an RSpec-like, readable format.
 
 When enabled with the ``--pyspec`` flag, this plugin:
   - Extends test discovery to also match ``it_`` functions and classes whose
-    names start with ``Describe`` or ``With``.
+    names start with ``Describe``, ``With``, ``Without``, or ``When``.
   - Builds a tree of containers/tests and renders them with friendly
     descriptions (favoring docstrings when present).
   - Uses pytest's stash to pass the current/previous Test objects between
@@ -44,8 +44,8 @@ def pytest_configure(config: pytest.Config) -> None:
     - ``enabled`` is set only when ``--pyspec`` is present and ``-v`` is not
       used (verbose mode already prints enough, so we defer to pytest's
       default output in that case).
-    - Appends discovery patterns for ``it_`` functions and ``Describe``/``With``
-      classes when pyspec is on.
+    - Appends discovery patterns for ``it_`` functions and ``Describe``, ``With``,
+      ``Without``, and ``When`` classes when pyspec is on.
     """
     # Store enabled state in config.stash for access in all hooks.
     enabled = config.getoption('pyspec') and not config.getoption('verbose')
@@ -60,6 +60,8 @@ def pytest_configure(config: pytest.Config) -> None:
         python_classes = config.getini("python_classes")
         python_classes.append('Describe')
         python_classes.append('With')
+        python_classes.append('Without')
+        python_classes.append('When')
         config.option.python_classes = python_classes
 
 

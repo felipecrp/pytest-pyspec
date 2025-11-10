@@ -55,6 +55,8 @@ class PytestNode:
         """Convert a Python identifier into a human-readable description."""
         # First convert identifier to words (CamelCase and snake_case)
         normalized = self._convert_identifier_to_words(self._original_name)
+        # Lowercase common words (before removing prefixes to preserve proper casing)
+        normalized = self._lowercase_common_words(normalized)
         # Then remove configured prefixes
         normalized = self._remove_test_prefixes(normalized)
         return normalized
@@ -75,6 +77,30 @@ class PytestNode:
             pattern = rf'^{prefix}\s+'
             text = re.sub(pattern, '', text, flags=re.IGNORECASE)
         return text
+    
+    def _lowercase_common_words(self, text: str) -> str:
+        """Lowercase common words (articles, prepositions, conjunctions) except at the start."""
+        # Common words to lowercase (articles, prepositions, conjunctions, auxiliary verbs)
+        common_words = {
+            'the', 'a', 'an', 'and', 'or', 'but', 'nor', 'for', 'yet', 'so',
+            'is', 'are', 'was', 'were', 'be', 'been', 'being',
+            'has', 'have', 'had', 'do', 'does', 'did',
+            'in', 'on', 'at', 'to', 'of', 'by', 'with', 'from', 'as'
+        }
+        
+        words = text.split()
+        if not words:
+            return text
+        
+        # Keep the first word as-is, lowercase common words in the rest
+        result = [words[0]]
+        for word in words[1:]:
+            if word.lower() in common_words:
+                result.append(word.lower())
+            else:
+                result.append(word)
+        
+        return ' '.join(result)
     
     @property
     def level(self) -> int:
@@ -145,7 +171,7 @@ class DescribedObject(PytestNode):
 
 class TestContext(PytestNode):
     """Represents a nested context class (e.g., WithSomeCondition)."""
-    prefixes_to_remove = ['test', 'with', 'without']
+    prefixes_to_remove = ['test', 'with', 'without', 'when']
     
     def __init__(self, item: pytest.Item):
         super().__init__(item)
@@ -155,17 +181,20 @@ class TestContext(PytestNode):
     
     @property
     def description_prefix(self) -> Optional[str]:
-        """Return 'with' or 'without' based on the original name."""
+        """Return 'with', 'without', or 'when' based on the original name."""
         name_lower = self._original_name.lower()
         # Check 'without' first since it contains 'with'
         if name_lower.startswith('without'):
             return 'without'
+        # Check for 'when' prefix
+        if name_lower.startswith('when'):
+            return 'when'
         # All other contexts get 'with' prefix (including those starting with 'with')
         return 'with'
     
     @property
     def description_with_prefix(self) -> str:
-        """Return description with prefix, keeping 'with'/'without' lowercase."""
+        """Return description with prefix, keeping 'with'/'without'/'when' lowercase."""
         if not self.description_prefix:
             return self.description
         
@@ -175,7 +204,7 @@ class TestContext(PytestNode):
             # Description already has the prefix, return as-is
             return self.description
         
-        # For contexts, always keep with/without lowercase
+        # For contexts, always keep with/without/when lowercase
         return f"{self.description_prefix} {self.description}"
     
     def add_context(self, context: 'TestContext') -> None:

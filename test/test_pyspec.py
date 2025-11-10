@@ -378,26 +378,6 @@ class TestTestContextOutput:
         assert expected in output
         result.assert_outcomes(passed=1)
 
-    def test_use_the_prefix_when(self, pytester: pytest.Pytester):
-        pytester.makepyfile('''
-            class TestThing:
-                class WhenTheHouseIsGreen:
-                    def test_do_something(self):
-                        assert 1 == 1
-        ''')
-        result = pytester.runpytest('--pyspec')
-        output = '\n'.join(result.outlines)
-        
-        expected = dedent("""
-            test_use_the_prefix_when.py 
-            A Thing
-              when the House is Green
-                ✓ do something
-        """).strip()
-        
-        assert expected in output
-        result.assert_outcomes(passed=1)
-
     class WithDocstring:
         def test_use_the_docstring(self, pytester: pytest.Pytester):
             pytester.makepyfile('''
@@ -446,12 +426,12 @@ class TestTestContextOutput:
             assert expected in output
             result.assert_outcomes(passed=1)
 
-        class WhenTheFirstLineIsEmpty:
+        class WithEmptyFirstLine:
             def test_use_the_formatted_name(self, pytester: pytest.Pytester):
                 pytester.makepyfile('''
                     class TestA:
                         """ thing """
-                        class WhenTheFirstLineIsEmpty:
+                        class WithContext:
                             """
                             
                             with more details
@@ -465,7 +445,7 @@ class TestTestContextOutput:
                 expected = dedent("""
                     test_use_the_formatted_name.py 
                     A thing
-                      when the First Line is Empty
+                      with Context
                         ✓ do something
                 """).strip()
                 
