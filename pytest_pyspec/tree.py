@@ -245,6 +245,54 @@ class Test(PytestNode):
             for node in nodes:
                 output += "\n" + node.format_for_output()
         return output
+    
+    def get_new_parent_nodes_string(self, prev_test: Optional['Test']) -> str:
+        """Get formatted string of only the new parent nodes since prev_test.
+        
+        Finds the common ancestor between this test and prev_test, then returns
+        only the parent nodes that are new (not shared with prev_test).
+        
+        Args:
+            prev_test: The previous test that was displayed
+            
+        Returns:
+            Multi-line string with formatted new parent nodes, each on a new line.
+            Returns empty string if no new parents need to be displayed.
+        """
+        if not prev_test:
+            # No previous test, show all parents
+            return self.get_parent_tree_string()
+        
+        # Get all parent nodes for both tests
+        self_parents = []
+        current = self.parent
+        while current:
+            if not isinstance(current, TestFile):
+                self_parents.insert(0, current)
+            current = current.parent if hasattr(current, 'parent') else None
+        
+        prev_parents = []
+        current = prev_test.parent
+        while current:
+            if not isinstance(current, TestFile):
+                prev_parents.insert(0, current)
+            current = current.parent if hasattr(current, 'parent') else None
+        
+        # Find where the parent chains diverge
+        common_depth = 0
+        for i in range(min(len(self_parents), len(prev_parents))):
+            if self_parents[i] is prev_parents[i]:
+                common_depth = i + 1
+            else:
+                break
+        
+        # Only print the new parent nodes
+        new_parents = self_parents[common_depth:]
+        output = ""
+        for node in new_parents:
+            output += "\n" + node.format_for_output()
+        
+        return output
 
 
 class SemanticTreeBuilder:

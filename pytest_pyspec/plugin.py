@@ -147,8 +147,8 @@ def pytest_report_teststatus(
         if report.when == 'setup':
             # Check if we need to print parent nodes
             if not prev_test or test.parent != prev_test.parent:
-                # Show parent tree
-                output = test.get_parent_tree_string()
+                # Show only new parent nodes (not already displayed)
+                output = test.get_new_parent_nodes_string(prev_test)
                 return '', output, ('', {'white': True})
 
         # Determine if this is the last test with the same parent

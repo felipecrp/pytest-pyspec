@@ -215,6 +215,87 @@ class TestTestCaseOutput:
                 assert expected in output
                 result.assert_outcomes(passed=1)
 
+    class WithMultipleTests:
+        def test_do_not_repeat_the_test_case_name(self, pytester: pytest.Pytester):
+            pytester.makepyfile("""
+                class TestSomething:
+                    def test_first_thing(self):
+                        assert True
+                    
+                    def test_second_thing(self):
+                        assert True
+            """)
+            result = pytester.runpytest('--pyspec')
+            output = '\n'.join(result.outlines)
+            
+            expected = dedent("""
+                A Something
+                  ✓ first thing
+                  ✓ second thing
+            """).strip()
+            
+            assert expected in output
+            # Verify the header appears only once
+            assert output.count('A Something') == 1
+            result.assert_outcomes(passed=2)
+        
+        def test_do_not_repeat_nested_context_headers(self, pytester: pytest.Pytester):
+            pytester.makepyfile("""
+                class TestParent:
+                    def test_direct_child(self):
+                        assert True
+                    
+                    class WithNestedContext:
+                        def test_nested_one(self):
+                            assert True
+                        
+                        def test_nested_two(self):
+                            assert True
+            """)
+            result = pytester.runpytest('--pyspec')
+            output = '\n'.join(result.outlines)
+            
+            expected = dedent("""
+                A Parent
+                  ✓ direct child
+                
+                  with Nested Context
+                    ✓ nested one
+                    ✓ nested two
+            """).strip()
+            
+            assert expected in output
+            # Verify parent header appears only once
+            assert output.count('A Parent') == 1
+            result.assert_outcomes(passed=3)
+        
+        def test_show_new_parent_when_switching_branches(self, pytester: pytest.Pytester):
+            pytester.makepyfile("""
+                class TestFirstBranch:
+                    def test_in_first(self):
+                        assert True
+                
+                class TestSecondBranch:
+                    def test_in_second(self):
+                        assert True
+            """)
+            result = pytester.runpytest('--pyspec')
+            output = '\n'.join(result.outlines)
+            
+            expected_first = dedent("""
+                A First Branch
+                  ✓ in first
+            """).strip()
+            
+            expected_second = dedent("""
+                A Second Branch
+                  ✓ in second
+            """).strip()
+            
+            assert expected_first in output
+            assert expected_second in output
+            result.assert_outcomes(passed=2)
+
 
 class TestTestContextOutput:
     def test_show_the_context_name(self, pytester: pytest.Pytester):
