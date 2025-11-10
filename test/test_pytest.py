@@ -1,5 +1,6 @@
 import pytest
 import re
+from textwrap import dedent
 
 
 pytest_plugins = ['pytest_pyspec', 'pytester']
@@ -155,3 +156,106 @@ class DescribeFunction:
                     result.assert_outcomes(passed=1)
 
 
+class TestModuleOutput:
+    
+    def test_show_the_module_name(self, pytester: pytest.Pytester):
+        pytester.makepyfile(test_example='''
+            class TestExample:
+                def test_something(self):
+                    assert True
+        ''')
+        result = pytester.runpytest('--pyspec')
+        output = '\n'.join(result.outlines)
+        
+        expected = dedent("""
+            test_example.py 
+            An Example
+              ✓ something
+        """).strip()
+        
+        assert expected in output
+        result.assert_outcomes(passed=1)
+    
+    def test_show_its_tests(self, pytester: pytest.Pytester):
+        pytester.makepyfile(test_example='''
+            class TestExample:
+                def test_first(self):
+                    assert True
+                
+                def test_second(self):
+                    assert True
+        ''')
+        result = pytester.runpytest('--pyspec')
+        output = '\n'.join(result.outlines)
+        
+        expected = dedent("""
+            test_example.py 
+            An Example
+              ✓ first
+              ✓ second
+        """).strip()
+        
+        assert expected in output
+        result.assert_outcomes(passed=2)
+
+
+class TestPackageOutput:
+    
+    def test_show_the_package_name(self, pytester: pytest.Pytester):
+        pytester.mkpydir("mypackage")
+        pytester.makepyfile(**{
+            "mypackage/test_example.py": '''
+                class TestExample:
+                    def test_something(self):
+                        assert True
+            '''
+        })
+        
+        result = pytester.runpytest('--pyspec')
+        output = '\n'.join(result.outlines)
+        
+        expected = dedent("""
+            mypackage/test_example.py 
+            An Example
+              ✓ something
+        """).strip()
+        
+        assert expected in output
+        result.assert_outcomes(passed=1)
+    
+    def test_show_its_modules(self, pytester: pytest.Pytester):
+        pytester.mkpydir("mypackage")
+        pytester.makepyfile(**{
+            "mypackage/test_alpha.py": '''
+                class TestAlpha:
+                    def test_something(self):
+                        assert True
+            '''
+        })
+        pytester.makepyfile(**{
+            "mypackage/test_beta.py": '''
+                class TestBeta:
+                    def test_something(self):
+                        assert True
+            '''
+        })
+        
+        result = pytester.runpytest('--pyspec')
+        output = '\n'.join(result.outlines)
+        
+        # Check both modules are shown with their tests
+        expected_alpha = dedent("""
+            mypackage/test_alpha.py 
+            An Alpha
+              ✓ something
+        """).strip()
+        
+        expected_beta = dedent("""
+            mypackage/test_beta.py 
+            A Beta
+              ✓ something
+        """).strip()
+        
+        assert expected_alpha in output
+        assert expected_beta in output
+        result.assert_outcomes(passed=2)
