@@ -2,7 +2,7 @@
 
 # pytest-pyspec
 
-The **pytest-pyspec** plugin transforms pytest output into a beautiful, readable format similar to RSpec. It provides semantic meaning to your tests by organizing them into descriptive hierarchies.
+The **pytest-pyspec** plugin transforms pytest output into a beautiful, readable format similar to RSpec. It provides semantic meaning to your tests by organizing them into descriptive hierarchies, using the prefixes `Describe`/`Test`, `With`/`Without`/`When`, and `test_`/`it_`, while allowing docstrings and decorators to override the descriptions.
 
 ## Features
 
