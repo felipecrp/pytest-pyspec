@@ -1,6 +1,6 @@
 # Using Docstrings
 
-While pytest-pyspec automatically generates readable descriptions from class and function names, you can use docstrings to provide completely custom descriptions.
+While pytest-pyspec automatically generates readable descriptions from class and function names, you can use docstrings to provide completely custom descriptions. Prefer decorators? Import the helpers from `pytest_pyspec` and apply `@describe`, `@with_`, `@without`, `@when`, or `@it` next to your classes/methods. Docstrings and decorators can coexist, but decorators always override docstrings when both are present, so you can keep docstrings for IDE/documentation purposes while letting decorators drive runtime output.
 
 ## Basic Docstring Usage
 
@@ -166,6 +166,33 @@ a user login system
     ✓ rejects login
     ✓ tracks failed login attempts
 ```
+
+## Combining Docstrings with Decorators
+
+Decorators always take precedence over docstrings, which means you can provide
+rich documentation while still controlling the displayed text explicitly.
+
+```python
+import pytest_pyspec as spec
+
+@spec.describe("electric car")
+class TestCar:
+    """sedan"""
+
+    @spec.it("reaches 200 mph")
+    def test_top_speed(self):
+        """drives fast"""
+        assert True
+```
+
+Output:
+```
+an electric car
+  ✓ reaches 200 mph
+```
+
+The docstrings remain available to IDEs and readers, but pyspec renders the
+decorator text instead.
 
 ## When to Use Docstrings
 

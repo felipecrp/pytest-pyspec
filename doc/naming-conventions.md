@@ -192,6 +192,8 @@ The correct article (a/an) is automatically chosen:
 - `TestApple` → `an Apple`
 - `TestBanana` → `a Banana`
 
+> Prefer explicit control? Use the decorators (`describe`, `with_`, `without`, `when`, `it`) re-exported by `pytest_pyspec`. They override whatever automatic transformation would have done.
+
 ## Nesting Contexts
 
 You can nest contexts to create complex hierarchies:

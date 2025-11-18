@@ -37,6 +37,7 @@ Welcome to the **pytest-pyspec** documentation. This plugin transforms pytest ou
 - **Smart word capitalization**: Common words (the, is, are, etc.) are automatically lowercased in the middle of descriptions
 - **Consolidated output**: Parent headers are shown only once, eliminating repetition
 - **Enhanced readability**: Natural language output that's easier to read
+- **Decorator helpers**: Override descriptions right beside your code
 
 ## Getting Help
 

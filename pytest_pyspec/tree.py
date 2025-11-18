@@ -8,6 +8,7 @@ from types import ModuleType
 from typing import Dict, Optional
 import re
 import pytest
+from pytest_pyspec.decorators import DESCRIPTION_ATTR
 
 
 class PytestNode:
@@ -25,6 +26,9 @@ class PytestNode:
     @property
     def description(self) -> str:
         """Return the base description without article/prefix."""
+        decorator_desc = self._description_from_decorator()
+        if decorator_desc:
+            return decorator_desc
         docstring = self._description_from_docstring()
         if docstring:
             return docstring
@@ -38,6 +42,10 @@ class PytestNode:
         
         # For all prefixes, keep them lowercase
         return f"{self.description_prefix} {self.description}"
+
+    def _description_from_decorator(self) -> Optional[str]:
+        """Extract description stored by pyspec decorators."""
+        return getattr(self._item.obj, DESCRIPTION_ATTR, None)
     
     def _description_from_docstring(self) -> Optional[str]:
         """Extract description from docstring if available."""

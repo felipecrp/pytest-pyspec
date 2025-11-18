@@ -381,6 +381,54 @@ a CSV file processor
     ✓ handles TSV files with custom delimiter
 ```
 
+## Example 6: Decorator Helpers
+
+Decorators from `pytest_pyspec` let you attach human-friendly descriptions right
+next to your code:
+
+```python
+import pytest_pyspec as spec
+
+@spec.describe("Car")
+class DescribeCar:
+    @spec.it("has wheels")
+    def test_has_wheels(self):
+        assert True
+
+    @spec.with_("full tank")
+    class WithFullTank:
+        @spec.it("drives far")
+        def test_drives_far(self):
+            assert True
+
+    @spec.without("fuel")
+    class WithoutFuel:
+        @spec.it("cannot start")
+        def test_cannot_start(self):
+            assert True
+
+    @spec.when("engine is running")
+    class WhenEngineIsRunning:
+        @spec.it("consumes fuel")
+        def test_consumes_fuel(self):
+            assert True
+```
+
+Output:
+```
+a Car
+  ✓ has wheels
+
+  with full tank
+    ✓ drives far
+
+  without fuel
+    ✓ cannot start
+
+  when engine is running
+    ✓ consumes fuel
+```
+
 ## Next Steps
 
 - [Configuration](configuration.md) - Learn about configuration options

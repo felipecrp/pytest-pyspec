@@ -11,6 +11,7 @@ The **pytest-pyspec** plugin transforms pytest output into a beautiful, readable
 - **Docstring Support**: Override test descriptions using docstrings
 - **Consolidated Output**: Smart grouping that avoids repeating parent headers
 - **Natural Language**: Automatic lowercase formatting of common words (the, is, are, etc.)
+- **Decorator Support**: Override descriptions right next to your classes and tests
 
 ## Quick Start
 
@@ -166,6 +167,43 @@ a sports car
   when nitro boost is activated
     ✓ accelerates rapidly
 ```
+
+### Using Decorators
+
+Prefer decorators over docstrings? Import the helpers directly from `pytest_pyspec`:
+
+```python
+import pytest_pyspec as spec
+
+@spec.describe("Car")
+class DescribeCar:
+    @spec.it("reaches 200 mph")
+    def test_top_speed(self):
+        assert True
+
+    @spec.when("nitro boost is activated")
+    class WhenTheNitroIsActivated:
+        @spec.it("accelerates rapidly")
+        def test_acceleration(self):
+            assert True
+```
+
+Output:
+```
+a Car
+  ✓ reaches 200 mph
+
+  when nitro boost is activated
+    ✓ accelerates rapidly
+```
+
+You can also import individual helpers (`describe`, `with_`, `without`, `when`,
+`it`) directly from `pytest_pyspec` if you prefer `from ... import ...` style.
+`with` is still exposed as `with_` because the plain name is reserved.
+
+Decorators always win when both a docstring and a decorator are present, so you
+can keep docstrings for documentation/IDE help while letting decorators drive
+runtime output.
 
 ## Configuration
 

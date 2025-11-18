@@ -117,6 +117,23 @@ pytest-pyspec automatically:
 - Removes test-related prefixes (test, describe, it, with, without, when)
 - Uses lowercase articles (a/an) for consistency
 
+## Using Decorators
+
+Prefer decorators to docstrings? Import helpers from `pytest_pyspec`:
+
+```python
+import pytest_pyspec as spec
+
+@spec.describe("Bank Account")
+class DescribeAccount:
+    @spec.it("starts at zero balance")
+    def test_initial_balance(self):
+        assert account.balance == 0
+```
+
+Decorators can be mixed with docstrings, but the decorator text always wins, so
+you can keep docstrings for documentation while letting decorators drive output.
+
 ## Next Steps
 
 - [Naming Conventions](naming-conventions.md) - Learn about all available prefixes

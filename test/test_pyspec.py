@@ -318,6 +318,7 @@ class TestTestContextOutput:
         assert expected in output
         result.assert_outcomes(passed=1)
 
+
     def test_use_the_formatted_name(self, pytester: pytest.Pytester):
         pytester.makepyfile('''
             class TestThing:

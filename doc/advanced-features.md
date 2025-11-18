@@ -256,6 +256,26 @@ pytest --pyspec -v  # Uses pytest's default verbose output
 pytest --pyspec     # Uses pyspec formatted output
 ```
 
+## Decorator Helpers
+
+Prefer decorating classes functions instead of relying on naming/docstrings?
+Import helpers from `pytest_pyspec`:
+
+```python
+import pytest_pyspec as spec
+
+@spec.describe("API client")
+class DescribeClient:
+    @spec.with_("valid credentials")
+    class WithValidCredentials:
+        @spec.it("authenticates successfully")
+        def test_auth(self):
+            assert True
+```
+
+Decorators can be mixed with docstrings and always override them when both are
+present, letting you keep docstrings for IDEs while still controlling output.
+
 ## Next Steps
 
 - [Examples](examples.md) - See complete real-world examples
