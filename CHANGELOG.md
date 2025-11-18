@@ -3,7 +3,7 @@
 All notable changes to this project are documented here. Release information is
 derived from the Git history and tagged versions.
 
-## [1.1.0] - Unreleased
+## [1.1.0]
 - Introduced decorator helpers (`describe`, `with_`, `without`, `when`, `it`) so descriptions can be customized without relying on docstrings.
 
 ## [1.0.0]
