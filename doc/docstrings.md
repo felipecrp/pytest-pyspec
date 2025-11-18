@@ -55,7 +55,10 @@ a Shopping Cart
 
 ## Multiline Docstrings
 
-When using multiline docstrings, **pytest-pyspec** uses the **first non-empty line**:
+When using multiline docstrings, **pytest-pyspec** only uses the **very first line as-is**.
+If that line is empty (a common pattern when using triple-quoted strings), the docstring
+is ignored and the identifier-derived description is used instead. Keep the first line
+non-empty to ensure the docstring takes effect.
 
 ```python
 class DescribeCalculator:
@@ -74,7 +77,7 @@ class DescribeCalculator:
 
 Output:
 ```
-a advanced scientific calculator
+an advanced scientific calculator
   ✓ adds two numbers correctly
 ```
 

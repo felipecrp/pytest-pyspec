@@ -53,10 +53,10 @@ class WithTheFeatureEnabled:
 Output: `with the Feature Enabled`
 
 ```python
-class TestTheAPIController:
+class TestAPIController:
     pass
 ```
-Output: `a The API Controller` (first word keeps capital)
+Output: `an API Controller` (leading vowel uses "an")
 
 ## Nested Contexts
 
